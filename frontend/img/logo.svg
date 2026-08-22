@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 580" fill="currentColor">
+  <!-- Exact 3-piece Geometric K Monogram -->
+  <!-- 1. Top-left shape -->
+  <path d="M 45,30 
+           L 170,30 
+           L 170,140 
+           L 25,285 
+           L 25,50 
+           C 25,39 34,30 45,30 Z" />
+  
+  <!-- 2. Bottom-left vertical base & central diagonal sweep -->
+  <path d="M 25,330 
+           L 170,185 
+           L 285,30 
+           L 455,30 
+           C 466,30 475,39 475,50 
+           L 475,170 
+           C 475,181 466,190 455,190 
+           L 330,190 
+           L 170,350 
+           L 170,525 
+           C 170,536 161,545 150,545 
+           L 45,545 
+           C 34,545 25,536 25,525 Z" />
+
+  <!-- 3. Bottom-right diagonal leg -->
+  <path d="M 200,360 
+           L 300,260 
+           L 455,415 
+           C 466,426 475,435 475,450 
+           L 475,525 
+           C 475,536 466,545 455,545 
+           L 325,545 
+           L 200,420 
+           L 200,360 Z" />
+</svg>

@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krude | Energy Supply Chain & Geopolitical Risk Digital Twin</title>
+  <meta name="description" content="Live geopolitical risk scoring, disruption simulation, and procurement rerouting for India's crude supply.">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Plus Jakarta Sans / Outfit / Inter as premium Gellix geometric grotesque typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body class="dark-theme">
+
+  <!-- PAGE PRELOADER -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-logo-wrap">
+        <svg class="loading-logo-svg" viewBox="0 0 500 580">
+          <path d="M 45,30 L 170,30 L 170,140 L 25,285 L 25,50 C 25,39 34,30 45,30 Z" />
+          <path d="M 25,330 L 170,185 L 285,30 L 455,30 C 466,30 475,39 475,50 L 475,170 C 475,181 466,190 455,190 L 330,190 L 170,350 L 170,525 C 170,536 161,545 150,545 L 45,545 C 34,545 25,536 25,525 Z" />
+          <path d="M 200,360 L 300,260 L 455,415 C 466,426 475,435 475,450 L 475,525 C 475,536 466,545 455,545 L 325,545 L 200,420 L 200,360 Z" />
+        </svg>
+      </div>
+      <h1 class="loading-title">Krude</h1>
+      <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- FLOATING NAVIGATION BAR (Reacts & Changes Color on Scroll) -->
+  <header id="site-header" class="site-header">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-brand" aria-label="Krude Home">
+        <div class="brand-logo-wrap">
+          <svg class="brand-logo-svg" id="nav-logo-svg" viewBox="0 0 500 580">
+            <path d="M 45,30 L 170,30 L 170,140 L 25,285 L 25,50 C 25,39 34,30 45,30 Z" />
+            <path d="M 25,330 L 170,185 L 285,30 L 455,30 C 466,30 475,39 475,50 L 475,170 C 475,181 466,190 455,190 L 330,190 L 170,350 L 170,525 C 170,536 161,545 150,545 L 45,545 C 34,545 25,536 25,525 Z" />
+            <path d="M 200,360 L 300,260 L 455,415 C 466,426 475,435 475,450 L 475,525 C 475,536 466,545 455,545 L 325,545 L 200,420 L 200,360 Z" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- Strict 5 Header Navigation Items -->
+      <nav class="nav-links">
+        <a href="#risk-board" class="nav-item">Risk Board</a>
+        <span class="nav-dot">·</span>
+        <a href="#simulator" class="nav-item">Simulator</a>
+        <span class="nav-dot">·</span>
+        <a href="#procurement" class="nav-item">Procurement</a>
+        <span class="nav-dot">·</span>
+        <a href="#digital-twin" class="nav-item">Twin</a>
+        <span class="nav-dot">·</span>
+        <a href="#ai-model" class="nav-item">Model</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main id="main-content" class="main-wrapper">
+
+    <!-- ===================================================================== -->
+    <!-- 1. HERO SECTION (Exact Nixtio Grid Layout) -->
+    <!-- ===================================================================== -->
+    <section id="hero" class="hero-section">
+      
+      <!-- Video / Ambient Background Layer -->
+      <div class="hero-bg-container">
+        <video id="hero-bg-video" class="hero-bg-video" autoplay muted loop playsinline poster="">
+          <!-- Fallback or user drops video in /static/img/hero.mp4 -->
+        </video>
+        <div class="hero-ambient-canvas" id="hero-ambient-canvas"></div>
+        <div class="hero-bg-overlay"></div>
+      </div>
+
+      <!-- Nixtio Grid Layout Content -->
+      <div class="hero-grid-container">
+        
+        <!-- Left: Massive Display Typography ("Krude" @ 14vw) -->
+        <div class="hero-left-col">
+          <div class="hero-title-mask">
+            <h1 class="hero-huge-title" id="hero-huge-title">
+              <span class="char-span">K</span>
+              <span class="char-span">r</span>
+              <span class="char-span">u</span>
+              <span class="char-span">d</span>
+              <span class="char-span">e</span>
+            </h1>
+          </div>
+
+          <!-- Bottom-Left Stat Row -->
+          <div class="hero-stat-row" id="hero-stat-row">
+            <div class="stat-pill">
+              <span class="stat-num" data-target="88" data-suffix="%">88%</span>
+              <span class="stat-label">imported</span>
+            </div>
+            <span class="stat-sep">·</span>
+            <div class="stat-pill">
+              <span class="stat-range">40–45%</span>
+              <span class="stat-label">via Hormuz</span>
+            </div>
+            <span class="stat-sep">·</span>
+            <div class="stat-pill highlight-stat">
+              <span class="stat-num stat-scary" data-target="9.5" data-suffix=" days" data-decimals="1">9.5 days</span>
+              <span class="stat-label">of cover</span>
+            </div>
+          </div>
+
+          <!-- Two-line Description Paragraph below stats (White & Grey) -->
+          <div class="hero-desc-block">
+            <p class="hero-desc-line1">We predict maritime chokepoint interdictions before markets react.</p>
+            <p class="hero-desc-line2">Autonomous AI routing, supply gap defense, and strategic petroleum reserve orchestration.</p>
+          </div>
+        </div>
+
+        <!-- Right: Tagline Block (40% width) + Live Status Card -->
+        <div class="hero-right-col">
+          <div class="hero-tagline-box">
+            <p class="hero-tagline-text">
+              Live geopolitical risk scoring, disruption simulation, and procurement rerouting for India's crude supply.
+            </p>
+          </div>
+
+          <!-- Live Status Card (Hormuz · 6.8 · updated 2m ago) -->
+          <div class="hero-live-card" id="hero-live-card">
+            <div class="live-card-inner">
+              <div class="live-card-status">
+                <span class="pulse-indicator pulse-red"></span>
+                <span class="live-corridor-name">Hormuz</span>
+              </div>
+              <div class="live-card-metric">
+                <span class="live-score-val" id="hero-live-score">6.8</span>
+                <span class="live-score-scale">/ 10</span>
+              </div>
+              <div class="live-card-footer">
+                <span class="live-update-badge"><i class="fa-solid fa-bolt"></i> RTX 3050 Live</span>
+                <span class="live-time-ago" id="hero-live-time">updated 2m ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Downward Scroll Indicator -->
+      <div class="hero-scroll-prompt">
+        <span class="prompt-text">Scroll to explore</span>
+        <div class="prompt-arrow"><i class="fa-solid fa-arrow-down-long"></i></div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 2. THE PROBLEM (Pinned Section with Real Indian Subcontinent Map) -->
+    <!-- ===================================================================== -->
+    <section id="the-problem" class="problem-pinned-section">
+      <div class="problem-container">
+        
+        <!-- Left Half: Rich Coastal Map of India & Sea Lanes -->
+        <div class="problem-left-fixed">
+          <div class="problem-map-wrapper">
+            <canvas id="problem-map-canvas" class="problem-map-canvas"></canvas>
+            <div class="map-state-badge" id="map-state-badge">
+              <span class="state-dot"></span>
+              <span class="state-text">India Import Inflow Corridor Map</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Half: 3 Pinned Narrative Beats -->
+        <div class="problem-right-scroll">
+          
+          <!-- Beat 1: Dependency -->
+          <div class="narrative-beat active-beat" id="beat-1" data-beat="dependency">
+            <div class="beat-badge">BEAT 01 / CONTEXT</div>
+            <h2 class="beat-title">Total Maritime Dependency</h2>
+            <p class="beat-lead">
+              India imports <strong class="text-white">88.2%</strong> of its crude oil requirements (5.405 MBPD).
+            </p>
+            <p class="beat-body">
+              Every day, dozens of supertankers traverse contested international waterways from the Persian Gulf, Red Sea, West Africa, and Russia to feed 23 domestic refineries.
+            </p>
+            <div class="beat-metric-strip">
+              <div class="bm-item">
+                <span class="bm-val">5.405 MBPD</span>
+                <span class="bm-lbl">Daily Import Need</span>
+              </div>
+              <div class="bm-item">
+                <span class="bm-val">23</span>
+                <span class="bm-lbl">Coastal Refineries</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Beat 2: Concentration -->
+          <div class="narrative-beat" id="beat-2" data-beat="concentration">
+            <div class="beat-badge">BEAT 02 / EXPOSURE</div>
+            <h2 class="beat-title">Chokepoint Concentration</h2>
+            <p class="beat-lead">
+              <strong class="text-amber">48.1%</strong> of all Indian crude sits behind a single 21-mile strait.
+            </p>
+            <p class="beat-body">
+              2.598 MBPD flows exclusively through the Strait of Hormuz from Iraq, Saudi Arabia, UAE, Kuwait, and Qatar. Another 43.6% relies on Bab-el-Mandeb and the Red Sea corridor.
+            </p>
+            <div class="beat-metric-strip">
+              <div class="bm-item">
+                <span class="bm-val text-red">2,598 kbd</span>
+                <span class="bm-lbl">Hormuz Volume</span>
+              </div>
+              <div class="bm-item">
+                <span class="bm-val text-amber">2,355 kbd</span>
+                <span class="bm-lbl">Red Sea Volume</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Beat 3: Buffer -->
+          <div class="narrative-beat" id="beat-3" data-beat="buffer">
+            <div class="beat-badge">BEAT 03 / VULNERABILITY</div>
+            <h2 class="beat-title">The Razor-Thin Strategic Buffer</h2>
+            <p class="beat-lead">
+              India holds only <strong class="text-red">9.5 days</strong> of Strategic Petroleum Reserves (SPR).
+            </p>
+            <p class="beat-body">
+              Compared to the IEA 90-day standard or China’s 80+ days, a prolonged blockade in the Persian Gulf exhausts sovereign emergency stocks in under two weeks.
+            </p>
+            
+            <!-- Clean Stacked SPR Comparison Bar (No Text Overlap) -->
+            <div class="spr-comparison-widget">
+              <div class="spr-stacked-comparison">
+                
+                <!-- Track 1: IEA Standard -->
+                <div class="spr-track-block">
+                  <div class="spr-track-info">
+                    <span class="spr-track-title">IEA Global Standard Reference</span>
+                    <span class="spr-track-num font-mono">90.0 Days</span>
+                  </div>
+                  <div class="spr-bar-bg">
+                    <div class="spr-bar-fill-iea" style="width: 100%;"></div>
+                  </div>
+                </div>
+
+                <!-- Track 2: India ISPRL Reserve -->
+                <div class="spr-track-block highlight-track">
+                  <div class="spr-track-info">
+                    <span class="spr-track-title text-red font-bold"><i class="fa-solid fa-triangle-exclamation"></i> India ISPRL Emergency Cover</span>
+                    <span class="spr-track-num font-mono text-red font-bold">9.5 Days (10.5% of IEA)</span>
+                  </div>
+                  <div class="spr-bar-bg">
+                    <div class="spr-bar-fill-india" id="spr-bar-india" style="width: 10.5%;"></div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="spr-footnote">ISPRL Phase I Underground Caverns: Visakhapatnam (1.33 MMT), Mangalore (1.50 MMT), Padur (2.50 MMT) = 5.33 MMT (~39.5 Mbbl).</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 3. LIVE RISK BOARD (Core Screen) -->
+    <!-- ===================================================================== -->
+    <section id="risk-board" class="section-container">
+      
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-radar"></i> Lock 1 Engine</span>
+          <span class="eyebrow-model-tag">Llama 3.2 3B + LoRA (RTX 3050)</span>
+        </div>
+        <h2 class="section-main-heading">Live Geopolitical Risk Board</h2>
+        <p class="section-sub-heading">Real-time interdiction probability P(t) calibrated across global maritime chokepoints.</p>
+      </div>
+
+      <!-- Row of 5 Chokepoint Cards -->
+      <div class="chokepoint-cards-grid" id="chokepoint-cards-grid">
+        
+        <!-- Card 1: Hormuz -->
+        <div class="chokepoint-card active-card" data-corridor="Hormuz" id="card-hormuz">
+          <div class="card-top-row">
+            <h3 class="card-corridor-name">Hormuz</h3>
+            <span class="delta-chip delta-up">+1.4 this wk</span>
+          </div>
+          <div class="card-gauge-row">
+            <div class="gauge-svg-wrap">
+              <svg class="radial-gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg-ring" cx="50" cy="50" r="42" />
+                <circle class="gauge-bar-ring ring-red" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="84" />
+              </svg>
+              <div class="gauge-val-center">
+                <span class="gauge-big-num">6.8</span>
+                <span class="gauge-max">/10</span>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas class="sparkline-canvas" id="sparkline-hormuz" width="120" height="45"></canvas>
+              <span class="spark-lbl">30-day trend</span>
+            </div>
+          </div>
+          <div class="card-footer-stats">
+            <span>2,598 kbd at risk</span>
+            <span class="threat-pill threat-red">CRITICAL</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Bab-el-Mandeb -->
+        <div class="chokepoint-card" data-corridor="Bab-el-Mandeb" id="card-babelmandeb">
+          <div class="card-top-row">
+            <h3 class="card-corridor-name">Bab-el-Mandeb</h3>
+            <span class="delta-chip delta-up">+0.8 this wk</span>
+          </div>
+          <div class="card-gauge-row">
+            <div class="gauge-svg-wrap">
+              <svg class="radial-gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg-ring" cx="50" cy="50" r="42" />
+                <circle class="gauge-bar-ring ring-amber" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="118" />
+              </svg>
+              <div class="gauge-val-center">
+                <span class="gauge-big-num">5.5</span>
+                <span class="gauge-max">/10</span>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas class="sparkline-canvas" id="sparkline-babelmandeb" width="120" height="45"></canvas>
+              <span class="spark-lbl">30-day trend</span>
+            </div>
+          </div>
+          <div class="card-footer-stats">
+            <span>2,355 kbd at risk</span>
+            <span class="threat-pill threat-amber">ELEVATED</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Suez Canal -->
+        <div class="chokepoint-card" data-corridor="Suez" id="card-suez">
+          <div class="card-top-row">
+            <h3 class="card-corridor-name">Suez Canal</h3>
+            <span class="delta-chip delta-neutral">0.0 this wk</span>
+          </div>
+          <div class="card-gauge-row">
+            <div class="gauge-svg-wrap">
+              <svg class="radial-gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg-ring" cx="50" cy="50" r="42" />
+                <circle class="gauge-bar-ring ring-amber" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="158" />
+              </svg>
+              <div class="gauge-val-center">
+                <span class="gauge-big-num">4.0</span>
+                <span class="gauge-max">/10</span>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas class="sparkline-canvas" id="sparkline-suez" width="120" height="45"></canvas>
+              <span class="spark-lbl">30-day trend</span>
+            </div>
+          </div>
+          <div class="card-footer-stats">
+            <span>900 kbd at risk</span>
+            <span class="threat-pill threat-amber">MODERATE</span>
+          </div>
+        </div>
+
+        <!-- Card 4: Malacca Strait -->
+        <div class="chokepoint-card" data-corridor="Malacca" id="card-malacca">
+          <div class="card-top-row">
+            <h3 class="card-corridor-name">Malacca Strait</h3>
+            <span class="delta-chip delta-down">-0.3 this wk</span>
+          </div>
+          <div class="card-gauge-row">
+            <div class="gauge-svg-wrap">
+              <svg class="radial-gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg-ring" cx="50" cy="50" r="42" />
+                <circle class="gauge-bar-ring ring-green" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="211" />
+              </svg>
+              <div class="gauge-val-center">
+                <span class="gauge-big-num">2.0</span>
+                <span class="gauge-max">/10</span>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas class="sparkline-canvas" id="sparkline-malacca" width="120" height="45"></canvas>
+              <span class="spark-lbl">30-day trend</span>
+            </div>
+          </div>
+          <div class="card-footer-stats">
+            <span>800 kbd at risk</span>
+            <span class="threat-pill threat-green">LOW</span>
+          </div>
+        </div>
+
+        <!-- Card 5: Cape of Good Hope -->
+        <div class="chokepoint-card" data-corridor="Cape of Good Hope" id="card-cape">
+          <div class="card-top-row">
+            <h3 class="card-corridor-name">Cape of Good Hope</h3>
+            <span class="delta-chip delta-neutral">0.0 this wk</span>
+          </div>
+          <div class="card-gauge-row">
+            <div class="gauge-svg-wrap">
+              <svg class="radial-gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg-ring" cx="50" cy="50" r="42" />
+                <circle class="gauge-bar-ring ring-green" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="232" />
+              </svg>
+              <div class="gauge-val-center">
+                <span class="gauge-big-num">1.2</span>
+                <span class="gauge-max">/10</span>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas class="sparkline-canvas" id="sparkline-cape" width="120" height="45"></canvas>
+              <span class="spark-lbl">30-day trend</span>
+            </div>
+          </div>
+          <div class="card-footer-stats">
+            <span>650 kbd at risk</span>
+            <span class="threat-pill threat-green">SAFE</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Interactive Weights Panel & Signal Breakdown -->
+      <div class="weights-breakdown-deck">
+        
+        <!-- Left: 4 Sliders Panel -->
+        <div class="weights-control-panel">
+          <div class="panel-header-row">
+            <div>
+              <h4 class="panel-title">Signal Weight Multipliers</h4>
+              <p class="panel-sub">Drag sliders to re-weight multi-source intelligence in real time.</p>
+            </div>
+            <button id="reset-weights-btn" class="reset-link-btn">Reset to defaults</button>
+          </div>
+
+          <div class="sliders-list">
+            
+            <div class="slider-row">
+              <div class="slider-labels">
+                <span class="sl-name">News & Kinetic Volume</span>
+                <span class="sl-val" id="val-weight-news">0.35</span>
+              </div>
+              <input type="range" class="custom-slider" id="slider-news" min="0" max="1" step="0.05" value="0.35">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-labels">
+                <span class="sl-name">Price & Freight Volatility</span>
+                <span class="sl-val" id="val-weight-price">0.25</span>
+              </div>
+              <input type="range" class="custom-slider" id="slider-price" min="0" max="1" step="0.05" value="0.25">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-labels">
+                <span class="sl-name">AIS Vessel Deviation</span>
+                <span class="sl-val" id="val-weight-vessel">0.30</span>
+              </div>
+              <input type="range" class="custom-slider" id="slider-vessel" min="0" max="1" step="0.05" value="0.30">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-labels">
+                <span class="sl-name">Sanctions & OFAC Pressure</span>
+                <span class="sl-val" id="val-weight-sanctions">0.10</span>
+              </div>
+              <input type="range" class="custom-slider" id="slider-sanctions" min="0" max="1" step="0.05" value="0.10">
+            </div>
+
+          </div>
+
+          <div class="weights-note">
+            <i class="fa-solid fa-circle-info"></i> Weights automatically normalize to sum to 1.00.
+          </div>
+        </div>
+
+        <!-- Right: 4-Row Signal Breakdown for Selected Corridor -->
+        <div class="signals-breakdown-panel">
+          <div class="panel-header-row">
+            <h4 class="panel-title" id="breakdown-corridor-title">Hormuz: Signal Contribution Breakdown</h4>
+            <span class="breakdown-score-badge" id="breakdown-final-score">Score: 6.8</span>
+          </div>
+
+          <div class="signals-table">
+            <div class="st-row st-header">
+              <span>Signal Stream</span>
+              <span>Raw Value</span>
+              <span>Weight</span>
+              <span class="text-right">Weighted Contribution</span>
+            </div>
+
+            <div class="st-row" id="sig-row-news">
+              <span class="st-stream"><i class="fa-regular fa-newspaper"></i> GDELT & Maritime Wire</span>
+              <span class="st-raw font-mono" id="raw-sig-news">8.5 / 10</span>
+              <span class="st-wt font-mono" id="wt-sig-news">0.35</span>
+              <span class="st-contrib font-mono text-right" id="contrib-sig-news">+2.98</span>
+            </div>
+
+            <div class="st-row" id="sig-row-price">
+              <span class="st-stream"><i class="fa-solid fa-chart-line"></i> Brent & War Risk Surcharge</span>
+              <span class="st-raw font-mono" id="raw-sig-price">6.2 / 10</span>
+              <span class="st-wt font-mono" id="wt-sig-price">0.25</span>
+              <span class="st-contrib font-mono text-right" id="contrib-sig-price">+1.55</span>
+            </div>
+
+            <div class="st-row" id="sig-row-vessel">
+              <span class="st-stream"><i class="fa-solid fa-ship"></i> AIS Tanker Rerouting Lag</span>
+              <span class="st-raw font-mono" id="raw-sig-vessel">5.8 / 10</span>
+              <span class="st-wt font-mono" id="wt-sig-vessel">0.30</span>
+              <span class="st-contrib font-mono text-right" id="contrib-sig-vessel">+1.74</span>
+            </div>
+
+            <div class="st-row" id="sig-row-sanctions">
+              <span class="st-stream"><i class="fa-solid fa-shield-halved"></i> OFAC SDN Entity Scrutiny</span>
+              <span class="st-raw font-mono" id="raw-sig-sanctions">5.3 / 10</span>
+              <span class="st-wt font-mono" id="wt-sig-sanctions">0.10</span>
+              <span class="st-contrib font-mono text-right" id="contrib-sig-sanctions">+0.53</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 4. HEADLINE TICKER (Holdout Dataset Proof) -->
+    <!-- ===================================================================== -->
+    <section id="headline-ticker" class="ticker-section">
+      <div class="ticker-header-bar">
+        <span class="ticker-label"><i class="fa-solid fa-bolt"></i> Live Model Stream</span>
+        <span class="ticker-sub">199-Row Holdout Validation Set · Click any pill to inspect model geopolitical reasoning</span>
+      </div>
+
+      <!-- Top Row: Marquee Left -->
+      <div class="marquee-track-wrap" id="marquee-wrap-1">
+        <div class="marquee-content marquee-left" id="marquee-row-1">
+          <!-- Dynamically populated from JS -->
+        </div>
+      </div>
+
+      <!-- Bottom Row: Marquee Right -->
+      <div class="marquee-track-wrap" id="marquee-wrap-2">
+        <div class="marquee-content marquee-right" id="marquee-row-2">
+          <!-- Dynamically populated from JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal for Pill Click: Model Reasoning vs Truth -->
+    <div id="headline-modal" class="custom-modal-overlay">
+      <div class="custom-modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-corridor-tag" id="modal-corridor-tag">HORMUZ</span>
+            <h3 class="modal-headline-title" id="modal-headline-title">Headline</h3>
+          </div>
+          <button class="modal-close-btn" id="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="scores-comparison-row">
+            <div class="score-box score-pred">
+              <span class="sb-label">Llama 3.2 3B Predicted</span>
+              <span class="sb-num" id="modal-pred-score">8.5</span>
+            </div>
+            <div class="score-box score-true">
+              <span class="sb-label">Ground Truth Label</span>
+              <span class="sb-num" id="modal-true-score">9.0</span>
+            </div>
+            <div class="score-box score-delta">
+              <span class="sb-label">Model Delta</span>
+              <span class="sb-num" id="modal-delta-score">-0.5</span>
+            </div>
+          </div>
+          <div class="modal-reason-box">
+            <h4 class="mrb-title">Geopolitical Reasoning Output:</h4>
+            <p class="mrb-text" id="modal-reason-text">Loading reason...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 5. RISK VS BRENT (Lead Indicator & Event Annotations) -->
+    <!-- ===================================================================== -->
+    <section id="risk-vs-brent" class="section-container">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-arrow-trend-up"></i> Market Leading Indicator</span>
+        </div>
+        <h2 class="section-main-heading">Geopolitical Risk vs Brent Crude</h2>
+        <p class="section-sub-heading">Historical lead indicator validation: Llama 3.2 3B risk index spikes lead physical spot price moves by 6 days.</p>
+      </div>
+
+      <div class="chart-panel-frame">
+        
+        <!-- Historical Escalation Events: Prediction vs Reality Ledger -->
+        <div class="events-truth-deck">
+          <div class="et-card">
+            <div class="et-header">
+              <span class="et-date">Apr 2024</span>
+              <span class="threat-pill threat-red">Spike</span>
+            </div>
+            <h4 class="et-title">MSC Aries Seizure & Retaliatory Strikes</h4>
+            <div class="et-comparison">
+              <div class="etc-item">
+                <span class="etc-lbl">Predicted Risk P(t):</span>
+                <span class="etc-val text-amber font-mono">9.4 / 10 (Critical)</span>
+              </div>
+              <div class="etc-item">
+                <span class="etc-lbl">Market Reality:</span>
+                <span class="etc-val text-white font-mono">Brent surged to $91.2/bbl (+6d lag)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="et-card">
+            <div class="et-header">
+              <span class="et-date">Oct 2024</span>
+              <span class="threat-pill threat-red">Spike</span>
+            </div>
+            <h4 class="et-title">180 Ballistic Missiles & Kharg Threat</h4>
+            <div class="et-comparison">
+              <div class="etc-item">
+                <span class="etc-lbl">Predicted Risk P(t):</span>
+                <span class="etc-val text-amber font-mono">9.8 / 10 (Maximum)</span>
+              </div>
+              <div class="etc-item">
+                <span class="etc-lbl">Market Reality:</span>
+                <span class="etc-val text-white font-mono">War-risk insurance surged +400%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="et-card">
+            <div class="et-header">
+              <span class="et-date">Jan 2026</span>
+              <span class="threat-pill threat-red">Spike</span>
+            </div>
+            <h4 class="et-title">Persian Gulf Jamming & Interdictions</h4>
+            <div class="et-comparison">
+              <div class="etc-item">
+                <span class="etc-lbl">Predicted Risk P(t):</span>
+                <span class="etc-val text-amber font-mono">9.1 / 10 (Severe)</span>
+              </div>
+              <div class="etc-item">
+                <span class="etc-lbl">Market Reality:</span>
+                <span class="etc-val text-white font-mono">VLCC daily charter: $88,500/day</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-canvas-container">
+          <canvas id="risk-brent-chart" class="risk-brent-chart"></canvas>
+        </div>
+
+        <div class="chart-legend-strip">
+          <div class="cl-item">
+            <span class="cl-box box-amber"></span>
+            <span><strong>Model Predicted Risk P(t)</strong> (0–10 Scale, Left Axis)</span>
+          </div>
+          <div class="cl-item">
+            <span class="cl-box box-white"></span>
+            <span><strong>Actual Brent Spot Price</strong> (USD/bbl, Right Axis)</span>
+          </div>
+          <div class="cl-item">
+            <span class="cl-dot dot-red"></span>
+            <span><strong>Historical Escalation Events</strong> (Apr 2024, Oct 2024, Jan 2026)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 6. SCENARIO SIMULATOR (Waterfall & 90-Day Supply Gap) -->
+    <!-- ===================================================================== -->
+    <section id="simulator" class="section-container">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-sliders"></i> Lock 2 Engine</span>
+        </div>
+        <h2 class="section-main-heading">Disruption Scenario Simulator</h2>
+        <p class="section-sub-heading">Simulate physical barrel deficits, macroeconomic headwinds, and landed import bill surges.</p>
+      </div>
+
+      <div class="simulator-deck">
+        
+        <!-- Left 1/3: Controls -->
+        <div class="sim-controls-col">
+          <h3 class="sim-controls-title">Scenario Controls</h3>
+
+          <!-- Presets -->
+          <div class="control-group">
+            <label class="control-label">DISRUPTION PRESET</label>
+            <div class="presets-btn-grid">
+              <button class="preset-btn active" data-preset="hormuz_closure">Hormuz Blockade</button>
+              <button class="preset-btn" data-preset="red_sea">Red Sea Standoff</button>
+              <button class="preset-btn" data-preset="combined">Dual Strait Crisis</button>
+              <button class="preset-btn" data-preset="custom">Custom</button>
+            </div>
+          </div>
+
+          <!-- Chokepoint Selector -->
+          <div class="control-group">
+            <label class="control-label">TARGET CHOKEPOINT</label>
+            <select id="sim-chokepoint-select" class="custom-select">
+              <option value="Hormuz" selected>Strait of Hormuz (2,598 kbd base)</option>
+              <option value="Bab-el-Mandeb">Bab-el-Mandeb / Red Sea (2,355 kbd base)</option>
+              <option value="Suez">Suez Canal (900 kbd base)</option>
+              <option value="Malacca">Malacca Strait (800 kbd base)</option>
+              <option value="Cape of Good Hope">Cape of Good Hope (650 kbd base)</option>
+            </select>
+          </div>
+
+          <!-- Duration Slider -->
+          <div class="control-group">
+            <div class="slider-labels">
+              <label class="control-label">DURATION (DAYS)</label>
+              <span class="control-val font-mono" id="sim-val-duration">30 days</span>
+            </div>
+            <input type="range" class="custom-slider" id="sim-slider-duration" min="5" max="90" step="5" value="30">
+          </div>
+
+          <!-- Severity Slider -->
+          <div class="control-group">
+            <div class="slider-labels">
+              <label class="control-label">SEVERITY (&phi; FACTOR)</label>
+              <span class="control-val font-mono" id="sim-val-severity">50% (Partial)</span>
+            </div>
+            <input type="range" class="custom-slider" id="sim-slider-severity" min="10" max="100" step="5" value="50">
+          </div>
+
+          <!-- SPR Toggle -->
+          <div class="control-group toggle-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="sim-toggle-spr" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Enable Strategic Reserve (SPR) Drawdown</span>
+          </div>
+
+          <!-- Run Scenario Button -->
+          <button id="run-scenario-btn" class="primary-run-btn">
+            <i class="fa-solid fa-play"></i> Run Disruption Scenario
+          </button>
+        </div>
+
+        <!-- Right 2/3: Results -->
+        <div class="sim-results-col">
+          
+          <!-- 3 Impact Tiles -->
+          <div class="sim-impact-tiles-grid">
+            <div class="impact-tile">
+              <span class="it-label">Cover Remaining</span>
+              <span class="it-val font-mono text-red" id="res-days-cover">6.2 days</span>
+              <span class="it-sub">Danger floor: 3.0 days</span>
+            </div>
+
+            <div class="impact-tile">
+              <span class="it-label">Peak Supply Shortfall</span>
+              <span class="it-val font-mono text-amber" id="res-peak-gap">1,299 kbd</span>
+              <span class="it-sub">~1.30 MBPD physical gap</span>
+            </div>
+
+            <div class="impact-tile">
+              <span class="it-label">Added Import Burden</span>
+              <span class="it-val font-mono text-white" id="res-import-cost">+$2.44 B</span>
+              <span class="it-sub">Price surge: +$15.02/bbl</span>
+            </div>
+          </div>
+
+          <!-- Multi-Stage Transmission Waterfall Deck (Properly Scaled & Highly Visible) -->
+          <div class="sim-chart-card">
+            <div class="card-header-bar">
+              <h4 class="card-header-title">Macroeconomic & Supply Transmission Waterfall</h4>
+              <span class="card-tag">Lock 2 Transmission Model</span>
+            </div>
+            
+            <div class="waterfall-cards-grid" id="waterfall-cards-grid">
+              
+              <div class="wf-pillar-card p-red">
+                <div class="wfc-top">
+                  <span class="wfc-icon"><i class="fa-solid fa-barrel-oil"></i></span>
+                  <span class="wfc-stage">Stage 1: Physical</span>
+                </div>
+                <div class="wfc-metric">
+                  <span class="wfc-val font-mono" id="wf-val-lost">1,299 kbd</span>
+                  <span class="wfc-lbl">Supply Interdicted</span>
+                </div>
+                <div class="wfc-bar-track">
+                  <div class="wfc-bar-fill fill-red" style="width: 85%;"></div>
+                </div>
+                <span class="wfc-desc">Blocked at chokepoint</span>
+              </div>
+
+              <div class="wf-pillar-card p-amber">
+                <div class="wfc-top">
+                  <span class="wfc-icon"><i class="fa-solid fa-money-bill-trend-up"></i></span>
+                  <span class="wfc-stage">Stage 2: Fiscal</span>
+                </div>
+                <div class="wfc-metric">
+                  <span class="wfc-val font-mono" id="wf-val-cost">+$2.44 B</span>
+                  <span class="wfc-lbl">Landed Import Bill</span>
+                </div>
+                <div class="wfc-bar-track">
+                  <div class="wfc-bar-fill fill-amber" style="width: 75%;"></div>
+                </div>
+                <span class="wfc-desc">+$15.02/bbl price shock</span>
+              </div>
+
+              <div class="wf-pillar-card p-blue">
+                <div class="wfc-top">
+                  <span class="wfc-icon"><i class="fa-solid fa-gas-pump"></i></span>
+                  <span class="wfc-stage">Stage 3: Consumer</span>
+                </div>
+                <div class="wfc-metric">
+                  <span class="wfc-val font-mono" id="wf-val-pump">+₹7.80 /L</span>
+                  <span class="wfc-lbl">Retail Fuel Pressure</span>
+                </div>
+                <div class="wfc-bar-track">
+                  <div class="wfc-bar-fill fill-blue" style="width: 70%;"></div>
+                </div>
+                <span class="wfc-desc">OMC retail parity pass-through</span>
+              </div>
+
+              <div class="wf-pillar-card p-rose">
+                <div class="wfc-top">
+                  <span class="wfc-icon"><i class="fa-solid fa-industry"></i></span>
+                  <span class="wfc-stage">Stage 4: Refining</span>
+                </div>
+                <div class="wfc-metric">
+                  <span class="wfc-val font-mono" id="wf-val-refinery">-15.0%</span>
+                  <span class="wfc-lbl">Capacity Run Cut</span>
+                </div>
+                <div class="wfc-bar-track">
+                  <div class="wfc-bar-fill fill-rose" style="width: 60%;"></div>
+                </div>
+                <span class="wfc-desc">Domestic crude feed deficit</span>
+              </div>
+
+              <div class="wf-pillar-card p-purple">
+                <div class="wfc-top">
+                  <span class="wfc-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                  <span class="wfc-stage">Stage 5: Macro</span>
+                </div>
+                <div class="wfc-metric">
+                  <span class="wfc-val font-mono" id="wf-val-gdp">-0.30 pp</span>
+                  <span class="wfc-lbl">Annual GDP Drag</span>
+                </div>
+                <div class="wfc-bar-track">
+                  <div class="wfc-bar-fill fill-purple" style="width: 55%;"></div>
+                </div>
+                <span class="wfc-desc">CAD widens +53 bps</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 90-Day Supply Gap Area Chart -->
+          <div class="sim-chart-card">
+            <div class="card-header-bar">
+              <h4 class="card-header-title">90-Day Supply Gap Forecast</h4>
+              <span class="card-tag">Red Area = Physical Deficit</span>
+            </div>
+            <div class="supplygap-container">
+              <canvas id="supply-gap-chart" class="supply-gap-chart" height="180"></canvas>
+            </div>
+          </div>
+
+          <div class="sim-honesty-note">
+            <i class="fa-solid fa-scale-balanced"></i>
+            <em>Estimates derived from structural elasticity model & DuckDB corridor baseline. Not a deterministic forecast.</em>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 7. PROCUREMENT ORCHESTRATOR -->
+    <!-- ===================================================================== -->
+    <section id="procurement" class="section-container">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-route"></i> Component 3</span>
+        </div>
+        <h2 class="section-main-heading">Adaptive Procurement Orchestrator</h2>
+        <p class="section-sub-heading">Real-time alternative crude route ranking with landed cost, transit time, and corridor risk filtering.</p>
+      </div>
+
+      <div class="procurement-list-deck" id="procurement-list-deck">
+        <!-- Dynamically rendered supplier route cards -->
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 8. RESERVE OPTIMISATION -->
+    <!-- ===================================================================== -->
+    <section id="reserve-opt" class="section-container">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-database"></i> ISPRL Strategic Reserve</span>
+        </div>
+        <h2 class="section-main-heading">Strategic Reserve Drawdown Optimisation</h2>
+        <p class="section-sub-heading">90-day sovereign inventory trajectories across competing drawdown policies.</p>
+      </div>
+
+      <div class="reserve-deck">
+        
+        <!-- Strategy Toggles -->
+        <div class="strategy-toggles-bar">
+          <button class="strat-btn active" data-strategy="steady">Steady Drawdown (180 kbd)</button>
+          <button class="strat-btn" data-strategy="aggressive">Aggressive Early Release (350 kbd)</button>
+          <button class="strat-btn" data-strategy="hold">Hold & Conserve</button>
+        </div>
+
+        <!-- 90-Day Trajectory Chart -->
+        <div class="reserve-chart-box">
+          <canvas id="reserve-chart" class="reserve-chart" height="260"></canvas>
+        </div>
+
+        <!-- Single-line Executive Verdict -->
+        <div class="reserve-verdict-banner">
+          <i class="fa-solid fa-circle-check text-green"></i>
+          <span class="verdict-text" id="reserve-verdict-text">
+            Steady drawdown at 180 kbd holds sovereign cover above 9.5 days through day 61.
+          </span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 9. DIGITAL TWIN (Interactive Geographic Supply Chain Map) -->
+    <!-- ===================================================================== -->
+    <section id="digital-twin" class="section-container">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-network-wired"></i> Block 5 Graph</span>
+        </div>
+        <h2 class="section-main-heading">Maritime Supply Chain Digital Twin</h2>
+        <p class="section-sub-heading">Geographic NetworkX supply graph mapping origins &rarr; chokepoints &rarr; Indian refinery discharge hubs & ISPRL caverns.</p>
+      </div>
+
+      <div class="twin-canvas-card">
+        <div class="twin-toolbar">
+          <div class="twin-legend">
+            <span class="tl-node node-country">Origin Source</span>
+            <span class="tl-node node-choke">Chokepoint</span>
+            <span class="tl-node node-dest">Indian Refinery Terminal</span>
+            <span class="tl-node node-spr">ISPRL Cavern</span>
+          </div>
+
+          <div class="twin-selector">
+            <label>Select Chokepoint:</label>
+            <select id="twin-chokepoint-select" class="twin-select">
+              <option value="Hormuz">Strait of Hormuz</option>
+              <option value="Bab-el-Mandeb">Bab-el-Mandeb</option>
+              <option value="Suez">Suez Canal</option>
+              <option value="Malacca">Malacca Strait</option>
+            </select>
+            <button id="twin-propagate-btn" class="twin-btn"><i class="fa-solid fa-radiation"></i> Trigger Cascade</button>
+            <button id="twin-reset-btn" class="twin-reset-btn"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+          </div>
+        </div>
+
+        <div class="twin-graph-viewport">
+          <canvas id="twin-graph-canvas" class="twin-graph-canvas"></canvas>
+          <div class="twin-status-overlay" id="twin-status-overlay">
+            <span id="twin-status-text">Ready · Decay factor: 0.60 per hop | Click Trigger Cascade to simulate interdiction propagation</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 10. AI MODEL SECTION (Llama 3.2 3B + LoRA) -->
+    <!-- ===================================================================== -->
+    <section id="ai-model" class="section-container">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-microchip"></i> Local GPU Intelligence</span>
+        </div>
+        <h2 class="section-main-heading">Fine-Tuned Llama 3.2 3B Architecture</h2>
+        <p class="section-sub-heading">LoRA fine-tuned weights served locally via Ollama on NVIDIA GeForce RTX 3050.</p>
+      </div>
+
+      <div class="model-grid-deck">
+        
+        <!-- Left: Training Story & Facts -->
+        <div class="model-story-card">
+          <h3 class="msc-title">Training Provenance & Limitations</h3>
+          <ul class="msc-list">
+            <li><strong>Model:</strong> Llama 3.2 3B Instruct + Low-Rank Adaptation (LoRA)</li>
+            <li><strong>Dataset:</strong> 1,512 verified maritime headlines &rarr; 1,313 train / 199 holdout</li>
+            <li><strong>Inference Input:</strong> Raw breaking news headline string (no corridor leak at inference)</li>
+            <li><strong>Serving Stack:</strong> Local Ollama runtime (`Krude-risk`), q8_0 quantization, NVIDIA RTX 3050 VRAM</li>
+          </ul>
+
+          <div class="model-limitation-box">
+            <i class="fa-solid fa-triangle-exclamation text-amber"></i>
+            <div>
+              <strong>Known Architectural Trade-off:</strong> Model was trained on headline + corridor + event type, but infers from headline alone in production to support un-categorized breaking news.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Metrics & Confusion Matrix -->
+        <div class="model-metrics-card">
+          <h3 class="msc-title">Validation Metrics vs Baseline</h3>
+          
+          <div class="mae-comparison-row">
+            <div class="mae-bar-box">
+              <span class="mbb-label">TF-IDF + Logistic Regression</span>
+              <div class="mbb-bar"><div class="mbb-fill" style="width: 78%;"></div></div>
+              <span class="mbb-val">MAE: 1.84</span>
+            </div>
+            <div class="mae-bar-box highlight-mae">
+              <span class="mbb-label">Llama 3.2 3B + LoRA (Ours)</span>
+              <div class="mbb-bar"><div class="mbb-fill fill-green" style="width: 32%;"></div></div>
+              <span class="mbb-val text-green">MAE: 0.72</span>
+            </div>
+          </div>
+
+          <div class="confusion-matrix-box">
+            <span class="cm-title">3&times;3 Threat Level Confusion Matrix (199-Row Holdout)</span>
+            <table class="cm-table">
+              <thead>
+                <tr>
+                  <th>True \ Pred</th>
+                  <th>Low (0-4)</th>
+                  <th>Med (4-7)</th>
+                  <th>High (7-10)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Low (0-4)</td>
+                  <td class="cell-hit">58</td>
+                  <td class="cell-miss">4</td>
+                  <td class="cell-zero">0</td>
+                </tr>
+                <tr>
+                  <td>Med (4-7)</td>
+                  <td class="cell-miss">5</td>
+                  <td class="cell-hit">62</td>
+                  <td class="cell-miss">6</td>
+                </tr>
+                <tr>
+                  <td>High (7-10)</td>
+                  <td class="cell-zero">1</td>
+                  <td class="cell-miss">4</td>
+                  <td class="cell-hit">59</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Custom Headline Inference Terminal -->
+      <div class="live-inference-terminal-card">
+        <div class="term-header">
+          <div class="term-dots">
+            <span class="t-dot red"></span>
+            <span class="t-dot amber"></span>
+            <span class="t-dot green"></span>
+          </div>
+          <span class="term-title">RTX 3050 Live Inference Sandbox (POST /api/model/analyze)</span>
+        </div>
+
+        <div class="term-body">
+          <div class="term-input-row">
+            <input type="text" id="custom-headline-input" class="term-input" placeholder="Enter breaking news headline..." value="IRGC fast boats intercept commercial tanker in Strait of Hormuz">
+            <button id="run-custom-inference-btn" class="term-btn"><i class="fa-solid fa-microchip"></i> Evaluate on GPU</button>
+          </div>
+
+          <div class="term-quick-samples">
+            <span>Quick Samples:</span>
+            <button class="quick-sample-btn" data-text="Houthi drone swarm targets container ship in southern Red Sea">Red Sea Drone</button>
+            <button class="quick-sample-btn" data-text="Indian Oil Corporation announces routine turnaround at Panipat refinery">Routine Ops</button>
+            <button class="quick-sample-btn" data-text="US and Oman sign bilateral maritime navigation security agreement">Diplomatic Calm</button>
+          </div>
+
+          <div class="term-output-box" id="term-output-box">
+            <div class="term-res-row">
+              <span class="term-res-label">Assigned Threat Score:</span>
+              <span class="term-res-score text-red" id="term-out-score">8.0 / 10.0</span>
+              <span class="term-res-latency" id="term-out-latency">Latency: ~210ms (NVIDIA GeForce RTX 3050)</span>
+            </div>
+            <div class="term-reason-line" id="term-out-reason">
+              Reasoning: IRGC maritime interdictions in Hormuz represent immediate kinetic threat to crude transit.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 11. ARCHITECTURE & CLOSE -->
+    <!-- ===================================================================== -->
+    <section id="architecture" class="section-container arch-section">
+      <div class="section-header-block">
+        <div class="section-eyebrow">
+          <span class="eyebrow-chip"><i class="fa-solid fa-sitemap"></i> System Architecture</span>
+        </div>
+        <h2 class="section-main-heading">End-to-End Intelligence Pipeline</h2>
+      </div>
+
+      <!-- Clean Left-to-Right Data Flow Diagram -->
+      <div class="arch-diagram-wrapper">
+        <div class="arch-stage">
+          <div class="arch-box">
+            <span class="ab-num">01</span>
+            <h4 class="ab-title">Ingestion</h4>
+            <p class="ab-desc">GDELT 2.0, AISstream, Vortexa, OFAC SDN, PPAC</p>
+          </div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        
+        <div class="arch-stage">
+          <div class="arch-box highlight-box">
+            <span class="ab-num">02</span>
+            <h4 class="ab-title">AI Inference</h4>
+            <p class="ab-desc">Llama 3.2 3B + LoRA (RTX 3050 GPU)</p>
+          </div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+
+        <div class="arch-stage">
+          <div class="arch-box">
+            <span class="ab-num">03</span>
+            <h4 class="ab-title">5-Stage Pipeline</h4>
+            <p class="ab-desc">Dedupe &rarr; Time Decay &rarr; Noisy-OR &rarr; Momentum &rarr; Sanctions</p>
+          </div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+
+        <div class="arch-stage">
+          <div class="arch-box">
+            <span class="ab-num">04</span>
+            <h4 class="ab-title">Scenario & Routing</h4>
+            <p class="ab-desc">DuckDB Exposure, NetworkX Graph & SPR Optimization</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Interactive CTA -->
+      <div class="final-cta-box">
+        <h3 class="cta-heading">Experience the Disruption Simulator</h3>
+        <p class="cta-sub">Test extreme geopolitical blockade scenarios and observe autonomous rerouting.</p>
+        <a href="#simulator" class="cta-action-btn" id="cta-scroll-sim-btn">
+          <i class="fa-solid fa-play"></i> Launch Interactive Simulator
+        </a>
+      </div>
+
+      <!-- Minimalist Footer -->
+      <footer class="site-footer">
+        <div class="footer-left">
+          <span class="footer-brand">Krude</span>
+          <span class="footer-copy">Energy Supply Chain & Maritime Geopolitical Risk Digital Twin</span>
+        </div>
+        <div class="footer-right">
+          <span class="footer-tag">NVIDIA GeForce RTX 3050 · FastAPI · DuckDB</span>
+        </div>
+      </footer>
+
+    </section>
+
+  </main>
+
+  <!-- Frontend JS Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

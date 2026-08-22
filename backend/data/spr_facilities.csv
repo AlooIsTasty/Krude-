@@ -1,0 +1,6 @@
+facility_name,state,latitude,longitude,capacity_mmt,capacity_mmbbl,commissioned_year,connected_refineries,phase,status,source
+Visakhapatnam,Andhra Pradesh,17.6868,83.2185,1.33,7.55,2015.0,HPCL Visakhapatnam,Phase I,Operational,real
+Mangalore,Karnataka,12.9141,74.856,1.5,11.00,2016.0,MRPL Mangalore,Phase I,Operational,real
+Padur,Karnataka,13.3833,74.75,2.5,18.37,2017.0,MRPL Mangalore (via pipeline),Phase I,Operational,real
+Chandikhol,Odisha,20.73,86.13,4.0,29.36,2027.0,IOCL Paradip (planned),Phase II,Under development,real
+Padur Commercial-cum-Strategic,Karnataka,13.3833,74.75,2.5,18.37,2028.0,MRPL Mangalore,Phase II (PPP),Under development,real

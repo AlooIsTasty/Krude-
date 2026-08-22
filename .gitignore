@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Databases & Dynamic Data Caches
+*.duckdb
+*.duckdb.wal
+*.db
+*.sqlite
+*.sqlite3
+backend/data/*.duckdb
+backend/data/*.duckdb.wal
+backend/data/*.db
+backend/data/*.sqlite
+backend/data/gdelt_cache.json
+
+# Generated Plots & Visual Benchmarks
+*.png
+backend/data/*_18m_risk_plot.*
+frontend/img/*_18m_risk_plot.*
+
+# Local Model Weights & Cache
+models/*.bin
+models/*.safetensors
+models/*.gguf
+backend/models/*.bin
+backend/models/*.safetensors
+backend/models/*.gguf
+
+# IDE & OS Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

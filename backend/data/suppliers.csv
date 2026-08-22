@@ -1,0 +1,36 @@
+country,grade,api_gravity,sulphur_pct,sanctioned,quality_adj_usd_per_bbl,base_fob_usd_per_bbl,max_liftable_kbd
+Iraq,Basrah Medium,29.0,2.9,0,1.02,78.5,1665.1
+Saudi Arabia,Arab Light,33.0,1.9,0,0.0,82.0,1543.9
+UAE,Murban,40.0,0.75,0,0.2,84.5,914.0
+Kuwait,Kuwait Export,31.0,2.6,0,0.43,79.5,874.9
+Qatar,Qatar Marine,36.0,1.4,0,0.0,81.0,0.0
+Oman,Oman Export,33.0,1.1,0,0.0,82.5,372.2
+Iran,Iranian Heavy,30.0,1.8,1,0.5,65.0,0.0
+Russia,Urals,31.0,1.5,1,0.25,68.5,3922.8
+Russia,ESPO,35.0,0.6,1,0.0,74.0,3922.8
+Nigeria,Bonny Light,34.0,0.15,0,0.0,85.5,409.4
+Angola,Girassol,32.0,0.3,0,0.0,83.5,446.6
+Angola,Cabinda,31.5,0.4,0,0.12,82.0,446.6
+Brazil,Tupi,30.0,0.35,0,0.5,81.5,335.0
+Brazil,Buzios,28.0,0.3,0,1.0,80.0,335.0
+Venezuela,Merey,16.0,2.5,1,4.15,58.0,325.1
+USA,WTI Midland,40.0,0.35,0,0.2,83.0,818.8
+USA,Mars Blend,29.0,1.8,0,0.75,79.0,818.8
+Libya,Es Sider,37.0,0.45,0,0.0,84.0,0.0
+Guyana,Liza,32.0,0.5,0,0.0,82.0,0.0
+Mexico,Maya,22.0,3.3,0,2.89,71.0,0.0
+Canada,Cold Lake / WCS,21.0,3.5,0,3.2,66.0,0.0
+Colombia,Castilla / Vasconia,19.0,1.9,0,3.25,72.0,0.0
+Ecuador,Oriente,24.0,1.5,0,2.0,73.5,0.0
+Norway,Johan Sverdrup,28.0,0.8,0,1.0,82.0,0.0
+Algeria,Saharan Blend,44.0,0.1,0,0.6,86.0,0.0
+Egypt,Belayim,27.5,2.2,0,1.19,77.0,0.0
+Sudan,Nile Blend,33.0,0.05,0,0.0,81.5,0.0
+Azerbaijan,Azeri Light,35.0,0.15,0,0.0,85.0,0.0
+Kazakhstan,CPC Blend,45.0,0.55,0,0.7,80.5,0.0
+Malaysia,Kimanis,36.0,0.1,0,0.0,86.5,0.0
+Australia,North West Shelf,54.0,0.02,0,1.6,84.0,0.0
+Congo,Djeno,27.5,0.3,0,1.12,79.0,0.0
+Gabon,Rabi Light,33.0,0.1,0,0.0,83.0,0.0
+Cameroon,Kole,31.0,0.35,0,0.25,81.0,0.0
+Equatorial Guinea,Zafiro,30.0,0.25,0,0.5,82.5,0.0
