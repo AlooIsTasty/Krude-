@@ -179,9 +179,9 @@ class TestKrudeDigitalTwin(unittest.TestCase):
         status = mgr.get_status()
         
         self.assertEqual(status["active_backend"], "OLLAMA")
-        self.assertEqual(status["model_name"], "Krude-risk")
+        self.assertEqual(status["model_name"], "KrudeAi")
         self.assertEqual(status["model_source_path"], r"C:\models\Krude")
-        self.assertEqual(status["acceleration_device"], "NVIDIA GeForce RTX 3050")
+        self.assertEqual(status["acceleration_device"], "CUDA Accelerated Engine")
         
         # Test analysis output schema
         res = mgr.analyze_headline("IRGC forces seize foreign tanker in Strait of Hormuz")

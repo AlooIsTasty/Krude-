@@ -18,14 +18,14 @@ An AI-powered decision-support system and geospatial digital twin that continuou
                 ┌──────────────────────────────────┐
                 │ FastAPI Backend (Port 8000)      │
                 │                                  │
-                │ Llama 3.2 3B + LoRA (Krude-risk) │
+                │ KrudeAi Neural Intelligence      │
                 │ Source: C:\models\Krude          │
                 │                                  │
-                │ NVIDIA GeForce RTX 3050 GPU      │
+                │ CUDA Accelerated Engine          │
                 └──────────────────────────────────┘
 ```
 
-1. **Fine-Tuned Llama 3.2 3B + LoRA Agent (REAL)**: Located in `C:\models\Krude`, registered in Ollama as `Krude-risk`. Evaluates live news headlines and outputs both numerical Risk Scores ($0 - 10$) and geopolitical reasoning.
+1. **KrudeAi Domain-Adapted Intelligence Model (REAL)**: Located in `C:\models\Krude`, registered in Ollama as `Krude-risk`. Evaluates live news headlines and outputs both numerical Risk Scores ($0 - 10$) and geopolitical reasoning.
 2. **Disruption Scenario Modeller (SIMULATED)**: Simulates Hormuz and Red Sea shocks, calculating physical barrel deficits, Cape of Good Hope rerouting lag (+17 days), freight surges, and macroeconomic damage (India import bill delta, CPI inflation rise, GDP headwinds).
 3. **Adaptive Procurement Orchestrator (REAL)**: Matches replacement global crude grades against Indian refinery Nelson complexity, API gravity, and sulfur limits with real Searoute marine distances.
 4. **Strategic Reserve (SPR) Optimiser (SIMULATED)**: Solves multi-cavern inventory drawdown (Mangalore, Padur, Visakhapatnam, Chandikhol) to bridge supply gaps.
@@ -36,7 +36,7 @@ An AI-powered decision-support system and geospatial digital twin that continuou
 ## 🛠️ How to Run This
 
 ### Step 1: Ensure Ollama is Running with the Krude Model
-Ollama automatically serves the fine-tuned model on your RTX 3050 GPU:
+Ollama automatically serves the fine-tuned model:
 ```bash
 ollama run Krude-risk
 ```

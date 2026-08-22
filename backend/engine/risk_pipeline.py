@@ -872,7 +872,7 @@ class RiskPipeline:
     def score_headlines_with_llama(self, sample_n: int = 5) -> List[Dict[str, Any]]:
         """
         Demonstrates live scoring of historical headlines using the fine-tuned
-        Llama 3.2 3B + LoRA model (Krude-risk on Ollama / RTX 3050).
+        KrudeAi model (Krude-risk on Ollama).
         """
         import requests
         import re

@@ -124,14 +124,14 @@ def get_system_overview():
         "version": "3.2.0",
         "database": db_summary,
         "ai_model": {
-            "name": model_status.get("model_name"),
-            "architecture": "Llama 3.2 3B Instruct + LoRA",
+            "name": "KrudeAi",
+            "architecture": "KrudeAi Domain-Adapted Intelligence Model",
             "weights_path": model_status.get("model_source_path"),
             "hardware": model_status.get("acceleration_device"),
-            "status": "Online (RTX 3050 CUDA Acceleration)"
+            "status": "Online (CUDA Acceleration)"
         },
         "truth_table": [
-            {"component": "Risk score & Geopolitical reasoning", "status": "Real — live headlines through fine-tuned Llama 3.2 3B + LoRA (C:\\models\\Krude on RTX 3050)"},
+            {"component": "Risk score & Geopolitical reasoning", "status": "Real — live headlines through fine-tuned KrudeAi inference engine"},
             {"component": "Maritime routes & distances", "status": "Real — searoute marine network graph + geometric chokepoint detection"},
             {"component": "Crude quality penalty", "status": "Real — API/Sulphur yield and hydrotreating penalty against 32 API / 2% S Indian baseline"},
             {"component": "Procurement ranking & allocation", "status": "Real — live optimization against DuckDB/SQLite dataset"},
@@ -146,18 +146,18 @@ def get_system_overview():
         "baseline_reserve_days": 9.5
     }
 
-# --- AI Model Endpoints (Llama 3.2 3B + LoRA on RTX 3050) ---
+# --- AI Model Endpoints (KrudeAi) ---
 
 @app.get("/api/model/status")
 def get_model_status():
-    """Returns current active model engine, GPU device, and model weights metadata."""
+    """Returns current active model engine, device, and model weights metadata."""
     return model_manager.get_status()
 
 @app.post("/api/model/analyze")
 def analyze_headline(req: HeadlineAnalysisRequest):
     """
-    Evaluates arbitrary geopolitical/maritime headlines using fine-tuned Llama 3.2 3B + LoRA.
-    Outputs calibrated Risk Score (0-10), Geopolitical Reasoning, and GPU inference latency.
+    Evaluates arbitrary geopolitical/maritime headlines using fine-tuned KrudeAi.
+    Outputs calibrated Risk Score (0-10), Geopolitical Reasoning, and inference latency.
     """
     return model_manager.analyze_headline(headline=req.headline, corridor=req.corridor)
 

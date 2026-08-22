@@ -4,7 +4,7 @@ Krude - Block 5: Live Poller Loop & SSE Stream Manager
 1. Live Poller:
    - Queries GDELT DOC 2.0 API every 10 minutes.
    - TF-IDF / domain keyword relevance filtering for maritime & crude chokepoints.
-   - Evaluates with fine-tuned Llama 3.2 3B + LoRA (Krude-risk on RTX 3050 / Ollama).
+   - Evaluates with fine-tuned KrudeAi inference engine.
    - Ingests into SQLite/DuckDB headlines table.
    - Recomputes corridor risk scores and broadcasts via Server-Sent Events (SSE).
 """

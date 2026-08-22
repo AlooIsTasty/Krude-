@@ -26,14 +26,28 @@ function initSupplyDisruptionStrip() {
   const tabs = document.querySelectorAll("#sp-filter-tabs .sp-tab");
   const tableContainer = document.getElementById("sp-suppliers-table");
 
-  // 1. Live Ticking Clock (Updates genuinely every 1s)
+  // 1. Live Ticking Clock (Updates genuinely in Indian Standard Time IST every 1s)
   function updateLiveClock() {
     if (!clockEl) return;
     const now = new Date();
-    const utcHours = String(now.getUTCHours()).padStart(2, '0');
-    const utcMinutes = String(now.getUTCMinutes()).padStart(2, '0');
-    const utcSeconds = String(now.getUTCSeconds()).padStart(2, '0');
-    clockEl.textContent = `${utcHours}:${utcMinutes}:${utcSeconds} UTC`;
+    try {
+      const istTimeStr = now.toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      clockEl.textContent = `${istTimeStr} IST`;
+    } catch (e) {
+      // Fallback manual offset (+5h 30m)
+      const istMs = now.getTime() + (5.5 * 60 * 60 * 1000);
+      const istDate = new Date(istMs);
+      const h = String(istDate.getUTCHours()).padStart(2, '0');
+      const m = String(istDate.getUTCMinutes()).padStart(2, '0');
+      const s = String(istDate.getUTCSeconds()).padStart(2, '0');
+      clockEl.textContent = `${h}:${m}:${s} IST`;
+    }
   }
   updateLiveClock();
   setInterval(updateLiveClock, 1000);
@@ -80,16 +94,21 @@ function initSupplyDisruptionStrip() {
       const pColor = s.p_supply_disruption >= 0.10 ? "text-red" : (s.p_supply_disruption >= 0.03 ? "text-amber" : "text-green");
       const bColor = s.p_supply_disruption >= 0.10 ? "bg-red" : (s.p_supply_disruption >= 0.03 ? "bg-amber" : "bg-green");
       const riskColor = s.at_risk_kbd > 0 ? (s.at_risk_kbd > 20 ? "text-red" : "text-amber") : "text-green";
+      const hasOfac = s.sanctions_friction_multiplier > 1.0 || s.ofac_records_count > 0;
       
       return `
-        <div class="sp-sup-row">
+        <div class="sp-sup-row" title="Data Fusion: News Risk + ${s.shipping_transit_days || 7}d Shipping Transit + ${hasOfac ? 'OFAC Scrutiny (+15%)' : 'Clean OFAC Status'}">
           <div class="sp-sup-info">
             <div class="sp-sup-name-row">
               <span class="sp-sup-name">${s.supplier}</span>
               <span class="sp-sup-region">${s.region}</span>
+              ${hasOfac ? '<span class="sp-sup-tag-ofac">OFAC Scrutiny</span>' : ''}
               <span style="font-size:0.72rem; color:var(--text-dim); font-family:var(--font-mono); margin-left:auto; padding-right:8px;">${s.baseline_flow_kbd} kbd</span>
             </div>
-            <span class="sp-sup-note">${s.best_route}</span>
+            <div class="sp-sup-meta-row">
+              <span class="sp-sup-note">${s.best_route}</span>
+              ${s.shipping_transit_days ? `<span class="sp-sup-shipping"><i class="fa-solid fa-ship"></i> ${s.shipping_transit_days}d (${(s.shipping_distance_km).toLocaleString()} km)</span>` : ''}
+            </div>
           </div>
           <div class="sp-sup-prob ${pColor}">${s.p_display}</div>
           <div class="sp-sup-bar-wrap">
@@ -391,46 +410,142 @@ const CHOKEPOINTS_DATA = {
   "Cape of Good Hope": { score: 1.2, delta: "0.0", risk_level: "green", kbd: 650, raw_signals: { news: 1.4, price: 1.0, vessel: 1.2, sanctions: 1.0 } }
 };
 
-let currentWeights = { news: 0.35, price: 0.25, vessel: 0.30, sanctions: 0.10 };
+const DEFAULT_SIGNALS = JSON.parse(JSON.stringify(CHOKEPOINTS_DATA));
+const FIXED_WEIGHTS = { news: 0.35, price: 0.25, vessel: 0.30, sanctions: 0.10 };
 let activeSelectedCorridor = "Hormuz";
+
+function getThreatInfo(score) {
+  if (score >= 7.0) {
+    return {
+      text: "CRITICAL",
+      stateClass: "state-red",
+      ringClass: "ring-red",
+      pillClass: "threat-red",
+      color: "var(--accent-red)",
+      strokeHex: "#EF4444"
+    };
+  } else if (score >= 4.0) {
+    return {
+      text: "MODERATE",
+      stateClass: "state-amber",
+      ringClass: "ring-amber",
+      pillClass: "threat-amber",
+      color: "var(--accent-amber)",
+      strokeHex: "#F59E0B"
+    };
+  } else {
+    return {
+      text: "LOW",
+      stateClass: "state-green",
+      ringClass: "ring-green",
+      pillClass: "threat-green",
+      color: "var(--accent-green)",
+      strokeHex: "#10B981"
+    };
+  }
+}
+
+function updateAllCorridorCards() {
+  Object.keys(CHOKEPOINTS_DATA).forEach(ck => {
+    const data = CHOKEPOINTS_DATA[ck];
+    const cardEl = document.querySelector(`.chokepoint-card[data-corridor="${ck}"]`);
+    if (!cardEl) return;
+
+    const isActive = (ck === activeSelectedCorridor);
+    const threat = getThreatInfo(data.score);
+
+    // Clean previous state classes
+    cardEl.classList.remove("active-card", "state-red", "state-amber", "state-green");
+
+    const bigNum = cardEl.querySelector(".gauge-big-num");
+    if (bigNum) bigNum.textContent = data.score.toFixed(1);
+
+    const ring = cardEl.querySelector(".gauge-bar-ring");
+    if (ring) {
+      const offset = 264 - (264 * (data.score / 10));
+      ring.style.strokeDashoffset = offset;
+      ring.classList.remove("ring-white", "ring-red", "ring-amber", "ring-green");
+    }
+
+    const pill = cardEl.querySelector(".threat-pill");
+    if (pill) {
+      pill.classList.remove("threat-neutral", "threat-red", "threat-amber", "threat-green");
+    }
+
+    if (isActive) {
+      cardEl.classList.add("active-card", threat.stateClass);
+      if (ring) ring.classList.add(threat.ringClass);
+      if (pill) {
+        pill.classList.add(threat.pillClass);
+        pill.textContent = threat.text;
+      }
+      if (bigNum) bigNum.style.color = threat.color;
+    } else {
+      if (ring) ring.classList.add("ring-white");
+      if (pill) {
+        pill.classList.add("threat-neutral");
+        pill.textContent = threat.text;
+      }
+      if (bigNum) bigNum.style.color = "var(--text-pure)";
+    }
+  });
+
+  drawAllSparklines();
+}
 
 function initRiskBoard() {
   const cards = document.querySelectorAll(".chokepoint-card");
-
-  cards.forEach(card => {
-    card.addEventListener("click", () => {
-      cards.forEach(c => c.classList.remove("active-card"));
-      card.classList.add("active-card");
-      activeSelectedCorridor = card.getAttribute("data-corridor") || "Hormuz";
-      updateSignalBreakdownTable();
-    });
-  });
-
   const sNews = document.getElementById("slider-news");
   const sPrice = document.getElementById("slider-price");
   const sVessel = document.getElementById("slider-vessel");
   const sSanctions = document.getElementById("slider-sanctions");
 
+  function syncSlidersToActiveCorridor() {
+    const data = CHOKEPOINTS_DATA[activeSelectedCorridor];
+    if (!data) return;
+    const titleEl = document.getElementById("weights-panel-title");
+    if (titleEl) titleEl.textContent = `${activeSelectedCorridor}: Threat Signal Tuner`;
+
+    if (sNews) { sNews.value = data.raw_signals.news; document.getElementById("val-weight-news").textContent = data.raw_signals.news.toFixed(1); }
+    if (sPrice) { sPrice.value = data.raw_signals.price; document.getElementById("val-weight-price").textContent = data.raw_signals.price.toFixed(1); }
+    if (sVessel) { sVessel.value = data.raw_signals.vessel; document.getElementById("val-weight-vessel").textContent = data.raw_signals.vessel.toFixed(1); }
+    if (sSanctions) { sSanctions.value = data.raw_signals.sanctions; document.getElementById("val-weight-sanctions").textContent = data.raw_signals.sanctions.toFixed(1); }
+
+    updateSignalBreakdownTable();
+  }
+
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      activeSelectedCorridor = card.getAttribute("data-corridor") || "Hormuz";
+      syncSlidersToActiveCorridor();
+      updateAllCorridorCards();
+    });
+  });
+
   function onSliderChange() {
-    const rawN = parseFloat(sNews.value);
-    const rawP = parseFloat(sPrice.value);
-    const rawV = parseFloat(sVessel.value);
-    const rawS = parseFloat(sSanctions.value);
-    const sum = rawN + rawP + rawV + rawS || 1;
+    const data = CHOKEPOINTS_DATA[activeSelectedCorridor];
+    if (!data) return;
 
-    currentWeights = {
-      news: rawN / sum,
-      price: rawP / sum,
-      vessel: rawV / sum,
-      sanctions: rawS / sum
-    };
+    data.raw_signals.news = parseFloat(sNews.value);
+    data.raw_signals.price = parseFloat(sPrice.value);
+    data.raw_signals.vessel = parseFloat(sVessel.value);
+    data.raw_signals.sanctions = parseFloat(sSanctions.value);
 
-    document.getElementById("val-weight-news").textContent = currentWeights.news.toFixed(2);
-    document.getElementById("val-weight-price").textContent = currentWeights.price.toFixed(2);
-    document.getElementById("val-weight-vessel").textContent = currentWeights.vessel.toFixed(2);
-    document.getElementById("val-weight-sanctions").textContent = currentWeights.sanctions.toFixed(2);
+    document.getElementById("val-weight-news").textContent = data.raw_signals.news.toFixed(1);
+    document.getElementById("val-weight-price").textContent = data.raw_signals.price.toFixed(1);
+    document.getElementById("val-weight-vessel").textContent = data.raw_signals.vessel.toFixed(1);
+    document.getElementById("val-weight-sanctions").textContent = data.raw_signals.sanctions.toFixed(1);
 
-    recalculateAllGauges();
+    // Compute updated score ONLY for the active corridor
+    const computedScore = (
+      data.raw_signals.news * FIXED_WEIGHTS.news +
+      data.raw_signals.price * FIXED_WEIGHTS.price +
+      data.raw_signals.vessel * FIXED_WEIGHTS.vessel +
+      data.raw_signals.sanctions * FIXED_WEIGHTS.sanctions
+    );
+    data.score = Math.round(computedScore * 10) / 10;
+
+    updateAllCorridorCards();
     updateSignalBreakdownTable();
   }
 
@@ -440,72 +555,62 @@ function initRiskBoard() {
 
   const resetBtn = document.getElementById("reset-weights-btn");
   if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      sNews.value = 0.35;
-      sPrice.value = 0.25;
-      sVessel.value = 0.30;
-      sSanctions.value = 0.10;
-      onSliderChange();
+    resetBtn.addEventListener("click", (e) => {
+      if (e) e.preventDefault();
+      if (DEFAULT_SIGNALS[activeSelectedCorridor]) {
+        CHOKEPOINTS_DATA[activeSelectedCorridor].raw_signals = JSON.parse(JSON.stringify(DEFAULT_SIGNALS[activeSelectedCorridor].raw_signals));
+        CHOKEPOINTS_DATA[activeSelectedCorridor].score = DEFAULT_SIGNALS[activeSelectedCorridor].score;
+
+        syncSlidersToActiveCorridor();
+        updateAllCorridorCards();
+      }
     });
   }
 
-  drawAllSparklines();
-  updateSignalBreakdownTable();
-}
-
-function recalculateAllGauges() {
-  Object.keys(CHOKEPOINTS_DATA).forEach(ck => {
-    const raw = CHOKEPOINTS_DATA[ck].raw_signals;
-    const computedScore = (
-      raw.news * currentWeights.news +
-      raw.price * currentWeights.price +
-      raw.vessel * currentWeights.vessel +
-      raw.sanctions * currentWeights.sanctions
-    );
-    CHOKEPOINTS_DATA[ck].score = Math.round(computedScore * 10) / 10;
-
-    const cardEl = document.querySelector(`.chokepoint-card[data-corridor="${ck}"]`);
-    if (cardEl) {
-      const bigNum = cardEl.querySelector(".gauge-big-num");
-      if (bigNum) bigNum.textContent = CHOKEPOINTS_DATA[ck].score.toFixed(1);
-
-      const ring = cardEl.querySelector(".gauge-bar-ring");
-      if (ring) {
-        const offset = 264 - (264 * (CHOKEPOINTS_DATA[ck].score / 10));
-        ring.style.strokeDashoffset = offset;
-      }
-    }
-  });
+  syncSlidersToActiveCorridor();
+  updateAllCorridorCards();
 }
 
 function updateSignalBreakdownTable() {
   const data = CHOKEPOINTS_DATA[activeSelectedCorridor];
   if (!data) return;
 
-  document.getElementById("breakdown-corridor-title").textContent = `${activeSelectedCorridor}: Signal Contribution Breakdown`;
-  document.getElementById("breakdown-final-score").textContent = `Score: ${data.score.toFixed(1)}`;
+  const titleEl = document.getElementById("breakdown-corridor-title");
+  if (titleEl) titleEl.textContent = `${activeSelectedCorridor}: Signal Contribution Breakdown`;
 
   const raw = data.raw_signals;
-  const contribN = (raw.news * currentWeights.news).toFixed(2);
-  const contribP = (raw.price * currentWeights.price).toFixed(2);
-  const contribV = (raw.vessel * currentWeights.vessel).toFixed(2);
-  const contribS = (raw.sanctions * currentWeights.sanctions).toFixed(2);
+  const contribN = (raw.news * FIXED_WEIGHTS.news).toFixed(2);
+  const contribP = (raw.price * FIXED_WEIGHTS.price).toFixed(2);
+  const contribV = (raw.vessel * FIXED_WEIGHTS.vessel).toFixed(2);
+  const contribS = (raw.sanctions * FIXED_WEIGHTS.sanctions).toFixed(2);
 
-  document.getElementById("raw-sig-news").textContent = `${raw.news.toFixed(1)} / 10`;
-  document.getElementById("wt-sig-news").textContent = currentWeights.news.toFixed(2);
-  document.getElementById("contrib-sig-news").textContent = `+${contribN}`;
+  const rawNewsEl = document.getElementById("raw-sig-news");
+  if (rawNewsEl) rawNewsEl.textContent = `${raw.news.toFixed(1)} / 10`;
+  const wtNewsEl = document.getElementById("wt-sig-news");
+  if (wtNewsEl) wtNewsEl.textContent = FIXED_WEIGHTS.news.toFixed(2);
+  const contribNewsEl = document.getElementById("contrib-sig-news");
+  if (contribNewsEl) contribNewsEl.textContent = `+${contribN}`;
 
-  document.getElementById("raw-sig-price").textContent = `${raw.price.toFixed(1)} / 10`;
-  document.getElementById("wt-sig-price").textContent = currentWeights.price.toFixed(2);
-  document.getElementById("contrib-sig-price").textContent = `+${contribP}`;
+  const rawPriceEl = document.getElementById("raw-sig-price");
+  if (rawPriceEl) rawPriceEl.textContent = `${raw.price.toFixed(1)} / 10`;
+  const wtPriceEl = document.getElementById("wt-sig-price");
+  if (wtPriceEl) wtPriceEl.textContent = FIXED_WEIGHTS.price.toFixed(2);
+  const contribPriceEl = document.getElementById("contrib-sig-price");
+  if (contribPriceEl) contribPriceEl.textContent = `+${contribP}`;
 
-  document.getElementById("raw-sig-vessel").textContent = `${raw.vessel.toFixed(1)} / 10`;
-  document.getElementById("wt-sig-vessel").textContent = currentWeights.vessel.toFixed(2);
-  document.getElementById("contrib-sig-vessel").textContent = `+${contribV}`;
+  const rawVesselEl = document.getElementById("raw-sig-vessel");
+  if (rawVesselEl) rawVesselEl.textContent = `${raw.vessel.toFixed(1)} / 10`;
+  const wtVesselEl = document.getElementById("wt-sig-vessel");
+  if (wtVesselEl) wtVesselEl.textContent = FIXED_WEIGHTS.vessel.toFixed(2);
+  const contribVesselEl = document.getElementById("contrib-sig-vessel");
+  if (contribVesselEl) contribVesselEl.textContent = `+${contribV}`;
 
-  document.getElementById("raw-sig-sanctions").textContent = `${raw.sanctions.toFixed(1)} / 10`;
-  document.getElementById("wt-sig-sanctions").textContent = currentWeights.sanctions.toFixed(2);
-  document.getElementById("contrib-sig-sanctions").textContent = `+${contribS}`;
+  const rawSanctionsEl = document.getElementById("raw-sig-sanctions");
+  if (rawSanctionsEl) rawSanctionsEl.textContent = `${raw.sanctions.toFixed(1)} / 10`;
+  const wtSanctionsEl = document.getElementById("wt-sig-sanctions");
+  if (wtSanctionsEl) wtSanctionsEl.textContent = FIXED_WEIGHTS.sanctions.toFixed(2);
+  const contribSanctionsEl = document.getElementById("contrib-sig-sanctions");
+  if (contribSanctionsEl) contribSanctionsEl.textContent = `+${contribS}`;
 }
 
 function drawAllSparklines() {
@@ -517,6 +622,14 @@ function drawAllSparklines() {
     "sparkline-cape": [1.2, 1.2, 1.1, 1.2, 1.2]
   };
 
+  const corridorMap = {
+    "sparkline-hormuz": "Hormuz",
+    "sparkline-babelmandeb": "Bab-el-Mandeb",
+    "sparkline-suez": "Suez",
+    "sparkline-malacca": "Malacca",
+    "sparkline-cape": "Cape of Good Hope"
+  };
+
   Object.keys(sparkConfigs).forEach(id => {
     const canvas = document.getElementById(id);
     if (!canvas) return;
@@ -525,16 +638,23 @@ function drawAllSparklines() {
     const w = canvas.width;
     const h = canvas.height;
 
+    const ck = corridorMap[id];
+    const isActive = (ck === activeSelectedCorridor);
+    const score = CHOKEPOINTS_DATA[ck] ? CHOKEPOINTS_DATA[ck].score : 5.0;
+    const threat = getThreatInfo(score);
+
     ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = id.includes("hormuz") ? "#EF4444" : (id.includes("babel") ? "#F59E0B" : "#10B981");
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = isActive ? threat.strokeHex : "rgba(255, 255, 255, 0.4)";
+    ctx.lineWidth = isActive ? 2.5 : 1.5;
     ctx.beginPath();
 
-    const min = 0;
-    const max = 10;
+    const min = Math.min(...vals) - 0.5;
+    const max = Math.max(...vals) + 0.5;
+    const range = max - min || 1;
+
     vals.forEach((v, idx) => {
-      const x = (idx / (vals.length - 1)) * (w - 8) + 4;
-      const y = h - ((v - min) / (max - min)) * (h - 8) - 4;
+      const x = (idx / (vals.length - 1)) * (w - 10) + 5;
+      const y = h - 6 - ((v - min) / range) * (h - 12);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -651,7 +771,7 @@ function syncHeroCardFromRisk(data) {
   }
 
   if (heroTimeEl) {
-    heroTimeEl.textContent = "live GDELT · Llama 3.2 3B";
+    heroTimeEl.textContent = "live GDELT · KrudeAi";
   }
 }
 
@@ -669,7 +789,7 @@ function openHeadlineModal(item) {
 
   const delta = (scoreVal - trueVal).toFixed(1);
   document.getElementById("modal-delta-score").textContent = (delta >= 0 ? `+${delta}` : delta);
-  document.getElementById("modal-reason-text").textContent = item.reason || `Evaluated by Krude-Risk (Llama 3.2 3B + LoRA fine-tuned adapter on RTX 3050). Source: ${item.source || 'GDELT Live DOC 2.0'}.`;
+  document.getElementById("modal-reason-text").textContent = item.reason || `Evaluated by KrudeAi. Source: ${item.source || 'GDELT Live DOC 2.0'}.`;
 
   modal.classList.add("active");
 }
@@ -1284,7 +1404,7 @@ function initModelSandbox() {
     if (!text) return;
 
     outScore.textContent = "...";
-    outReason.textContent = "Evaluating headline on local NVIDIA RTX 3050 GPU...";
+    outReason.textContent = "Evaluating headline with KrudeAi inference engine...";
 
     const t0 = performance.now();
     try {
@@ -1294,11 +1414,11 @@ function initModelSandbox() {
         const latency = Math.round(t1 - t0);
 
         outScore.textContent = `${res.risk_score.toFixed(1)} / 10.0`;
-        outLatency.textContent = `Latency: ~${latency}ms (NVIDIA GeForce RTX 3050)`;
+        outLatency.textContent = `Latency: ~${latency}ms (KrudeAi Engine)`;
         outReason.textContent = `Reasoning: ${res.reason || "Model calibrated geopolitical risk evaluation."}`;
       } else {
         outScore.textContent = "8.0 / 10.0";
-        outLatency.textContent = `Latency: ~180ms (Local Ollama)`;
+        outLatency.textContent = `Latency: ~180ms (KrudeAi Fast Engine)`;
         outReason.textContent = `Reasoning: Kinetic naval interdiction in strategic maritime corridor.`;
       }
     } catch (e) {

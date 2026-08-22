@@ -160,10 +160,10 @@ with st.sidebar:
     )
     
     st.divider()
-    st.markdown("### 🤖 Local AI Model Status")
-    st.markdown("- **Model**: Llama 3.2 3B + LoRA (`Krude-risk`)")
-    st.markdown("- **Hardware**: NVIDIA RTX 3050 GPU")
-    st.markdown("- **Inference**: Ollama Local Endpoint")
+    st.markdown("### 🤖 KrudeAi Model Status")
+    st.markdown("- **Model**: KrudeAi Domain-Adapted Intelligence")
+    st.markdown("- **Engine**: Local CUDA Acceleration")
+    st.markdown("- **Inference**: High-Throughput Engine")
     st.markdown("- **Live Feed**: GDELT DOC 2.0 (16 Themes)")
 
 # ------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ st.markdown("""
             <span class="panel-tag">Risk Intelligence Agent</span>
         </div>
         <div style="font-family: monospace; font-size: 0.85rem; color: #10B981; font-weight: 700;">
-            ● LIVE &nbsp;|&nbsp; 30-day horizon · updated every 10 min
+            ● LIVE &nbsp;|&nbsp; 30-day horizon (IST)
         </div>
     </div>
     <div style="font-size: 0.84rem; color: #94A3B8; margin-bottom: 12px;">
