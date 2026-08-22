@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
    ============================================================================== */
 function initNativeSmoothScroll() {
   const header = document.getElementById("site-header");
-  
+
   // Instant scroll listener with passive flag for 60fps performance
   window.addEventListener("scroll", () => {
     if (window.scrollY > 60) {
@@ -36,7 +36,7 @@ function initNativeSmoothScroll() {
 
   // Fast Native Anchor Scrolling
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener("click", function(e) {
+    anchor.addEventListener("click", function (e) {
       e.preventDefault();
       const targetId = this.getAttribute("href");
       if (targetId === "#") return;
@@ -54,7 +54,7 @@ function initNativeSmoothScroll() {
 function initPreloader() {
   const preloader = document.getElementById("loading-screen");
   if (!preloader) return;
-  
+
   setTimeout(() => {
     preloader.classList.add("loaded");
   }, 400);
@@ -65,14 +65,14 @@ function initPreloader() {
    ============================================================================== */
 function initHeroStats() {
   const statElements = document.querySelectorAll(".stat-num");
-  
+
   setTimeout(() => {
     statElements.forEach(el => {
       const target = parseFloat(el.getAttribute("data-target") || 0);
       const suffix = el.getAttribute("data-suffix") || "";
       const decimals = parseInt(el.getAttribute("data-decimals") || 0);
       const isScary = el.classList.contains("stat-scary");
-      
+
       const duration = isScary ? 1400 : 1000;
       const startTime = performance.now();
 
@@ -97,196 +97,139 @@ function initHeroStats() {
 }
 
 /* ==============================================================================
-   4. THE PROBLEM (Rich Coastal Map of India, Arabian Sea & Inflows)
+   4. THE PROBLEM (Rich Coastal Map of India & Maritime Inflows - Static Basemap)
    ============================================================================== */
-function initProblemCoastalMap() {
-  const canvas = document.getElementById("problem-map-canvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+// Mercator Projection bounds matching basemap.svg
+const LON_MIN = 15.0, LON_MAX = 112.0;
+const Y_MIN = -41.137682, Y_MAX = 41.137682; // mercator y of lat -38 / +38
 
-  function resizeCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
+const mercY = lat => (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2));
+
+function projectGeo(lon, lat) {
+  return {
+    left: ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * 100, // %
+    top: ((Y_MAX - mercY(lat)) / (Y_MAX - Y_MIN)) * 100  // %
+  };
+}
+
+// Zero-Size Anchor Marker Builder (Dots Only)
+function createMarkerElement(node, isDimmed, projectionFn = projectGeo) {
+  const pos = projectionFn(node.lon, node.lat);
+
+  const el = document.createElement("div");
+  el.className = "mk";
+  el.style.left = `${pos.left.toFixed(2)}%`;
+  el.style.top = `${pos.top.toFixed(2)}%`;
+  if (isDimmed) el.style.opacity = "0.25";
+  if (node.name) {
+    el.setAttribute("title", `${node.name}${node.sub ? ' (' + node.sub + ')' : ''}`);
   }
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
 
-  let currentBeat = "dependency";
-  let mapAnimTime = 0;
+  const color = node.color || "#e6e9ef";
 
-  // Real geographic points projected on canvas
+  el.innerHTML = `
+    <span class="mk-dot" style="background: ${color};"></span>
+    ${(node.isIndia || node.isChoke) ? `<span class="mk-pulse" style="color: ${color};"></span>` : ''}
+  `;
+  return el;
+}
+
+function initProblemCoastalMap() {
+  const routesSvg = document.getElementById("problem-routes-svg");
+  const markersLayer = document.getElementById("problem-markers-layer");
+  if (!markersLayer || !routesSvg) return;
+
   const mapNodes = {
-    // Sources & Chokepoints
-    hormuz: { x: 0.22, y: 0.38, name: "Strait of Hormuz (2,598 kbd)", color: "#EF4444", size: 7 },
-    babelmandeb: { x: 0.16, y: 0.62, name: "Bab-el-Mandeb (2,355 kbd)", color: "#F59E0B", size: 6 },
-    malacca: { x: 0.88, y: 0.72, name: "Malacca Strait (800 kbd)", color: "#10B981", size: 6 },
-    cape: { x: 0.10, y: 0.88, name: "Cape of Good Hope (650 kbd)", color: "#38BDF8", size: 5 },
+    // Chokepoints & Foreign Hubs (Split name & sub, custom edge flipX/flipY)
+    hormuz: { lon: 56.25, lat: 26.56, name: "Strait of Hormuz", sub: "2,598 kbd", color: "#EF4444", isChoke: true, flipX: true, nudgeY: -6 },
+    babelmandeb: { lon: 43.33, lat: 12.58, name: "Bab-el-Mandeb", sub: "2,355 kbd", color: "#F59E0B", isChoke: true, flipX: true, nudgeY: 4 },
+    malacca: { lon: 102.89, lat: 1.43, name: "Malacca Strait", sub: "800 kbd", color: "#10B981", isChoke: true, flipX: true, nudgeY: -4 },
+    cape: { lon: 18.47, lat: -34.35, name: "Cape of Good Hope", sub: "650 kbd", color: "#38BDF8", isChoke: true, flipY: true, nudgeY: -8 },
     
-    // Indian Coastal Hubs & Refineries
-    jamnagar: { x: 0.58, y: 0.46, name: "Jamnagar / Vadinar (1,760 kbd)", color: "#FFFFFF", size: 8, isIndia: true },
-    mumbai: { x: 0.61, y: 0.55, name: "Mumbai Hub (250 kbd)", color: "#FFFFFF", size: 5, isIndia: true },
-    mangalore: { x: 0.63, y: 0.68, name: "Mangalore (MRPL + ISPRL)", color: "#E11D48", size: 6, isIndia: true, isSPR: true },
-    kochi: { x: 0.64, y: 0.76, name: "Kochi (310 kbd)", color: "#FFFFFF", size: 5, isIndia: true },
-    vizag: { x: 0.74, y: 0.58, name: "Visakhapatnam (HPCL + ISPRL)", color: "#E11D48", size: 6, isIndia: true, isSPR: true },
-    paradip: { x: 0.77, y: 0.50, name: "Paradip (300 kbd)", color: "#FFFFFF", size: 5, isIndia: true }
+    // Indian Coastal Hubs & Refineries (fine-tuned cartographic vertical nudges)
+    jamnagar: { lon: 70.06, lat: 22.47, name: "Jamnagar / Vadinar", sub: "1,760 kbd", color: "#FFFFFF", isIndia: true, nudgeY: -14 },
+    mumbai: { lon: 72.84, lat: 18.94, name: "Mumbai Hub", sub: "250 kbd", color: "#FFFFFF", isIndia: true, nudgeY: 8 },
+    mangalore: { lon: 74.85, lat: 12.91, name: "Mangalore", sub: "MRPL + ISPRL", color: "#E11D48", isIndia: true, isSPR: true, nudgeY: 4 },
+    kochi: { lon: 76.26, lat: 9.93, name: "Kochi", sub: "310 kbd", color: "#FFFFFF", isIndia: true, nudgeY: 8 },
+    vizag: { lon: 83.21, lat: 17.68, name: "Visakhapatnam", sub: "HPCL + ISPRL", color: "#E11D48", isIndia: true, isSPR: true, nudgeY: -12 },
+    paradip: { lon: 86.67, lat: 20.26, name: "Paradip", sub: "300 kbd", color: "#FFFFFF", isIndia: true, nudgeY: 10 }
   };
 
   const supplyRoutes = [
-    { from: "hormuz", to: "jamnagar", share: 0.481, color: "#EF4444", name: "Hormuz Primary" },
-    { from: "hormuz", to: "mangalore", share: 0.200, color: "#EF4444", name: "Hormuz South" },
-    { from: "babelmandeb", to: "jamnagar", share: 0.436, color: "#F59E0B", name: "Red Sea Lane" },
-    { from: "babelmandeb", to: "kochi", share: 0.150, color: "#F59E0B", name: "Red Sea South" },
-    { from: "malacca", to: "vizag", share: 0.148, color: "#10B981", name: "Malacca East" },
-    { from: "cape", to: "jamnagar", share: 0.120, color: "#38BDF8", name: "Cape Longhaul" }
+    { from: "hormuz", to: "jamnagar", share: 0.481, color: "#EF4444", name: "Hormuz Primary", curveOffset: -35 },
+    { from: "hormuz", to: "mangalore", share: 0.200, color: "#EF4444", name: "Hormuz South", curveOffset: -25 },
+    { from: "babelmandeb", to: "jamnagar", share: 0.436, color: "#F59E0B", name: "Red Sea Lane", curveOffset: -40 },
+    { from: "babelmandeb", to: "kochi", share: 0.150, color: "#F59E0B", name: "Red Sea South", curveOffset: -20 },
+    { from: "malacca", to: "vizag", share: 0.148, color: "#10B981", name: "Malacca East", curveOffset: 25 },
+    { from: "cape", to: "jamnagar", share: 0.120, color: "#38BDF8", name: "Cape Longhaul", curveOffset: -60 }
   ];
 
+  let currentBeat = "dependency";
+
   function renderMap() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const w = canvas.width;
-    const h = canvas.height;
+    // 1. Render Markers with zero-size anchor
+    markersLayer.innerHTML = "";
+    Object.keys(mapNodes).forEach(k => {
+      const node = mapNodes[k];
+      const isDimmed = (currentBeat === "concentration" && !node.isIndia && k !== "hormuz");
+      const el = createMarkerElement(node, isDimmed);
+      markersLayer.appendChild(el);
+    });
 
-    // Subtle dark nautical grid
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-    ctx.lineWidth = 1;
-    for (let x = 0; x < w; x += 36) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-      ctx.stroke();
-    }
-    for (let y = 0; y < h; y += 36) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
-    }
-
-    // Draw Stylized Indian Subcontinent Coastline Contour
-    ctx.save();
-    ctx.beginPath();
-    // Gujarat Peninsula to Kanyakumari to Bengal
-    ctx.moveTo(w * 0.54, h * 0.40);
-    ctx.lineTo(w * 0.58, h * 0.44); // Rann of Kutch
-    ctx.lineTo(w * 0.56, h * 0.48); // Kathiawar
-    ctx.lineTo(w * 0.60, h * 0.52); // Gulf of Khambhat
-    ctx.lineTo(w * 0.62, h * 0.62); // Konkan Coast
-    ctx.lineTo(w * 0.64, h * 0.74); // Malabar Coast
-    ctx.lineTo(w * 0.67, h * 0.84); // Cape Comorin (Kanyakumari)
-    ctx.lineTo(w * 0.70, h * 0.74); // Coromandel Coast
-    ctx.lineTo(w * 0.73, h * 0.62); // Andhra Coast
-    ctx.lineTo(w * 0.78, h * 0.50); // Odisha Coast
-    ctx.lineTo(w * 0.80, h * 0.42); // Bay of Bengal Head
-    ctx.lineTo(w * 0.82, h * 0.35);
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Subtle Landmass Fill
-    ctx.lineTo(w * 0.68, h * 0.28);
-    ctx.closePath();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.025)";
-    ctx.fill();
-    ctx.restore();
-
-    // Draw Arabian Sea & Bay of Bengal Water Labels
-    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-    ctx.font = "bold 11px Plus Jakarta Sans";
-    ctx.fillText("ARABIAN SEA", w * 0.36, h * 0.58);
-    ctx.fillText("BAY OF BENGAL", w * 0.78, h * 0.64);
-    ctx.fillText("INDIAN OCEAN", w * 0.48, h * 0.90);
-
-    // Draw Inflow Maritime Routes
+    // 2. Render Route Curves into SVG overlay (viewBox 0 0 1000 848.2)
+    routesSvg.innerHTML = "";
     supplyRoutes.forEach(r => {
       const src = mapNodes[r.from];
       const dst = mapNodes[r.to];
       if (!src || !dst) return;
 
-      const sx = w * src.x;
-      const sy = h * src.y;
-      const dx = w * dst.x;
-      const dy = h * dst.y;
+      const p1 = projectGeo(src.lon, src.lat);
+      const p2 = projectGeo(dst.lon, dst.lat);
 
-      let opacity = 0.75;
-      let strokeWidth = r.share * 10;
+      const x1 = p1.left * 10;
+      const y1 = p1.top * 8.482;
+      const x2 = p2.left * 10;
+      const y2 = p2.top * 8.482;
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+
+      // Perpendicular control point
+      const nx = -dy / dist;
+      const ny = dx / dist;
+      const curve = r.curveOffset || (dist * 0.15);
+      const cx = midX + nx * curve;
+      const cy = midY + ny * curve;
+
+      let opacity = 0.85;
+      let strokeWidth = Math.max(2, r.share * 9);
 
       if (currentBeat === "concentration") {
         if (!r.name.includes("Hormuz")) {
-          opacity = 0.12;
-          strokeWidth = 1.5;
+          opacity = 0.15;
+          strokeWidth = 1.2;
         } else {
-          opacity = 1;
-          strokeWidth = 12;
+          opacity = 1.0;
+          strokeWidth = 9.0;
         }
       } else if (currentBeat === "buffer") {
-        opacity = 0.20;
-        strokeWidth = 2;
+        opacity = 0.30;
+        strokeWidth = 1.8;
       }
 
-      // Curved Oceanic Shipping Lane
-      const mx = (sx + dx) / 2;
-      const my = (sy + dy) / 2 - 30;
-
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.quadraticCurveTo(mx, my, dx, dy);
-      ctx.strokeStyle = r.color;
-      ctx.globalAlpha = opacity;
-      ctx.lineWidth = strokeWidth;
-      ctx.stroke();
-
-      // Moving Tanker Pulse Particle
-      const t = (mapAnimTime * 0.35 + (r.name.includes("Hormuz") ? 0 : 0.45)) % 1;
-      const px = Math.pow(1 - t, 2) * sx + 2 * (1 - t) * t * mx + Math.pow(t, 2) * dx;
-      const py = Math.pow(1 - t, 2) * sy + 2 * (1 - t) * t * my + Math.pow(t, 2) * dy;
-
-      ctx.beginPath();
-      ctx.arc(px, py, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.globalAlpha = opacity > 0.3 ? 1 : 0.2;
-      ctx.fill();
-
-      ctx.globalAlpha = 1;
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", `M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`);
+      path.setAttribute("class", "route-arc");
+      path.setAttribute("stroke", r.color);
+      path.setAttribute("stroke-width", strokeWidth);
+      path.setAttribute("stroke-opacity", opacity);
+      routesSvg.appendChild(path);
     });
-
-    // Draw Geographic Nodes & Labels
-    Object.keys(mapNodes).forEach(k => {
-      const node = mapNodes[k];
-      const nx = w * node.x;
-      const ny = h * node.y;
-
-      let nodeOpacity = 1;
-      if (currentBeat === "concentration" && !node.isIndia && k !== "hormuz") {
-        nodeOpacity = 0.25;
-      }
-
-      ctx.globalAlpha = nodeOpacity;
-
-      // Pulse for Major Hubs
-      if (node.isIndia || k === "hormuz") {
-        ctx.beginPath();
-        ctx.arc(nx, ny, node.size + Math.sin(mapAnimTime * 3) * 3, 0, Math.PI * 2);
-        ctx.strokeStyle = node.isSPR ? "rgba(225, 29, 72, 0.4)" : (k === "hormuz" ? "rgba(239, 68, 68, 0.4)" : "rgba(255, 255, 255, 0.3)");
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-
-      ctx.beginPath();
-      ctx.arc(nx, ny, node.size, 0, Math.PI * 2);
-      ctx.fillStyle = node.color;
-      ctx.fill();
-
-      // Label
-      ctx.fillStyle = node.isIndia ? "#FFFFFF" : "rgba(255, 255, 255, 0.8)";
-      ctx.font = node.isIndia ? "bold 10px Plus Jakarta Sans" : "9.5px Plus Jakarta Sans";
-      ctx.fillText(node.name, nx + 10, ny + 3);
-
-      ctx.globalAlpha = 1;
-    });
-
-    mapAnimTime += 0.016;
-    requestAnimationFrame(renderMap);
   }
+
   renderMap();
 
   // Scroll Synchronization for the 3 Beats
@@ -305,12 +248,14 @@ function initProblemCoastalMap() {
           else if (currentBeat === "concentration") stateBadge.querySelector(".state-text").textContent = "Strait of Hormuz Concentration (48.1% of Crude)";
           else if (currentBeat === "buffer") stateBadge.querySelector(".state-text").textContent = "Strategic Reserve Buffer (9.5 Days Sovereign Cover)";
         }
+        renderMap();
       }
     });
   }, { threshold: 0.55 });
 
   beats.forEach(b => observer.observe(b));
 }
+
 
 /* ==============================================================================
    5. LIVE RISK BOARD
@@ -328,7 +273,7 @@ let activeSelectedCorridor = "Hormuz";
 
 function initRiskBoard() {
   const cards = document.querySelectorAll(".chokepoint-card");
-  
+
   cards.forEach(card => {
     card.addEventListener("click", () => {
       cards.forEach(c => c.classList.remove("active-card"));
@@ -502,7 +447,7 @@ async function initHeadlineTicker() {
     const res = await fetch("/api/risk");
     if (res.ok) {
       const data = await res.json();
-      
+
       // Update Hero Landing Page Card
       syncHeroCardFromRisk(data);
 
@@ -529,7 +474,7 @@ async function initHeadlineTicker() {
     console.warn("Using baseline headline memory for ticker:", err);
   }
 
-  const dataset = liveArticles.length >= 4 
+  const dataset = liveArticles.length >= 4
     ? [...liveArticles, ...DEFAULT_RATED_HEADLINES, ...liveArticles, ...DEFAULT_RATED_HEADLINES]
     : [...DEFAULT_RATED_HEADLINES, ...DEFAULT_RATED_HEADLINES, ...DEFAULT_RATED_HEADLINES];
 
@@ -598,7 +543,7 @@ function openHeadlineModal(item) {
   document.getElementById("modal-headline-title").textContent = item.headline;
   document.getElementById("modal-pred-score").textContent = scoreVal.toFixed(1);
   document.getElementById("modal-true-score").textContent = trueVal.toFixed(1);
-  
+
   const delta = (scoreVal - trueVal).toFixed(1);
   document.getElementById("modal-delta-score").textContent = (delta >= 0 ? `+${delta}` : delta);
   document.getElementById("modal-reason-text").textContent = item.reason || `Evaluated by Krude-Risk (Llama 3.2 3B + LoRA fine-tuned adapter on RTX 3050). Source: ${item.source || 'GDELT Live DOC 2.0'}.`;
@@ -693,7 +638,7 @@ async function initRiskVsBrentChart() {
           borderWidth: 1,
           padding: 12,
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               if (context.datasetIndex === 0) {
                 const idx = context.dataIndex;
                 const pDisr = pDisruptions[idx] || (context.raw * 1.1).toFixed(1);
@@ -701,7 +646,7 @@ async function initRiskVsBrentChart() {
               }
               return `Brent Spot: $${context.raw}/bbl`;
             },
-            footer: function(tooltipItems) {
+            footer: function (tooltipItems) {
               const label = tooltipItems[0].label || "";
               if (label.includes("Apr 24")) return "⚡ Apr 2024: MSC Aries Seizure & Strikes (+6d warning)";
               if (label.includes("Oct 24")) return "⚡ Oct 2024: 180 Ballistic Missiles & Kharg Threat";
@@ -803,7 +748,7 @@ function executeScenario() {
   // Update Top 3 Tiles
   document.getElementById("res-peak-gap").textContent = `${dailyDeficitKbd.toLocaleString()} kbd`;
   document.getElementById("res-import-cost").textContent = `+$${importCostDelta} B`;
-  
+
   const daysCoverRemaining = Math.max(3.0, (9.5 - (dailyDeficitKbd / 5405.0) * duration * 0.25)).toFixed(1);
   document.getElementById("res-days-cover").textContent = `${daysCoverRemaining} days`;
 
@@ -929,7 +874,7 @@ async function renderSupplyGapChart(days, gapKbd) {
           borderWidth: 1,
           padding: 10,
           callbacks: {
-            footer: function(tooltipItems) {
+            footer: function (tooltipItems) {
               const idx = tooltipItems[0].dataIndex;
               if (idx === 34) return "⚓ Day 35: Cape of Good Hope VLCC Cargoes Land (+1,100 kbd) · SPR Tapers to 0";
               if (idx < 32) return "⚡ Days 1–32: Strategic Reserve Front-Loaded Drawdown (450 kbd max)";
@@ -979,7 +924,7 @@ function initProcurementList() {
   SUPPLIER_ROUTES.forEach((item, idx) => {
     const card = document.createElement("div");
     card.className = `procurement-card ${idx === 0 ? 'expanded' : ''}`;
-    
+
     card.innerHTML = `
       <div class="pc-top-row">
         <span class="pc-rank ${idx === 0 ? 'rank-top' : ''}">#${item.rank}</span>
@@ -1049,143 +994,110 @@ function initReserveChart() {
 }
 
 /* ==============================================================================
-   11. DIGITAL TWIN (Geographic Supply Chain Map & Reset Button)
+   11. DIGITAL TWIN (World Scale NetworkX Graph - Static World Basemap)
    ============================================================================== */
+// World Mercator Bounds (Houston through Malacca) - dedicated to Digital Twin Map
+const WORLD_LON_MIN = -130.0, WORLD_LON_MAX = 150.0;
+const WORLD_Y_MIN = -54.858810, WORLD_Y_MAX = 93.846974;
+
+const mercYWorld = lat => (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI / 180) / 2));
+
+function projectWorld(lon, lat) {
+  return {
+    left: ((lon - WORLD_LON_MIN) / (WORLD_LON_MAX - WORLD_LON_MIN)) * 100,
+    top:  ((WORLD_Y_MAX - mercYWorld(lat)) / (WORLD_Y_MAX - WORLD_Y_MIN)) * 100
+  };
+}
+
 function initDigitalTwinMap() {
-  const canvas = document.getElementById("twin-graph-canvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
+  const routesSvg = document.getElementById("twin-routes-svg");
+  const markersLayer = document.getElementById("twin-markers-layer");
+  if (!markersLayer || !routesSvg) return;
 
-  function resize() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  // Geographic Nodes (Projected across Middle East / Indian Ocean / India)
   const initialNodes = [
-    { id: "src_rt", name: "Ras Tanura", x: 0.16, y: 0.32, type: "country", risk: 0 },
-    { id: "src_bot", name: "Basrah Port", x: 0.14, y: 0.24, type: "country", risk: 0 },
-    { id: "src_yanbu", name: "Yanbu (Red Sea)", x: 0.12, y: 0.44, type: "country", risk: 0 },
-    { id: "src_duqm", name: "Duqm (Oman)", x: 0.28, y: 0.48, type: "country", risk: 0 },
+    // Global Supply Origins
+    { id: "src_houston", name: "Houston / Corpus Christi", sub: "US WTI Export", lon: -95.36, lat: 29.76, type: "country", risk: 0 },
+    { id: "src_santos", name: "Santos Basin (Brazil)", sub: "Tupi Heavy Sweet", lon: -46.33, lat: -23.96, type: "country", risk: 0 },
+    { id: "src_primorsk", name: "Primorsk (Baltic)", sub: "Russian Urals", lon: 28.60, lat: 60.36, type: "country", risk: 0 },
+    { id: "src_rt", name: "Ras Tanura", sub: "Saudi Aramco", lon: 50.12, lat: 26.64, type: "country", risk: 0 },
+    { id: "src_bot", name: "Basrah Port", sub: "SOMO Iraq", lon: 47.83, lat: 30.50, type: "country", risk: 0 },
+    { id: "src_yanbu", name: "Yanbu", sub: "Red Sea", lon: 38.06, lat: 24.08, type: "country", risk: 0 },
+    { id: "src_duqm", name: "Duqm Hub", sub: "Oman", lon: 57.70, lat: 19.66, type: "country", risk: 0 },
     
-    { id: "ck_hormuz", name: "Strait of Hormuz", x: 0.32, y: 0.36, type: "choke", risk: 0 },
-    { id: "ck_babel", name: "Bab-el-Mandeb", x: 0.20, y: 0.60, type: "choke", risk: 0 },
-    { id: "ck_malacca", name: "Malacca Strait", x: 0.88, y: 0.76, type: "choke", risk: 0 },
+    // Critical Chokepoints
+    { id: "ck_cape", name: "Cape of Good Hope", sub: "Chokepoint", lon: 18.47, lat: -34.35, type: "choke", risk: 0, isChoke: true },
+    { id: "ck_suez", name: "Suez Canal", sub: "Chokepoint", lon: 32.34, lat: 30.58, type: "choke", risk: 0, isChoke: true },
+    { id: "ck_babel", name: "Bab-el-Mandeb", sub: "Chokepoint", lon: 43.33, lat: 12.58, type: "choke", risk: 0, isChoke: true },
+    { id: "ck_hormuz", name: "Strait of Hormuz", sub: "Chokepoint", lon: 56.25, lat: 26.56, type: "choke", risk: 0, isChoke: true },
+    { id: "ck_malacca", name: "Malacca Strait", sub: "Chokepoint", lon: 102.89, lat: 1.43, type: "choke", risk: 0, isChoke: true },
     
     // Indian Discharge Ports & Refineries
-    { id: "dest_jam", name: "Jamnagar Hub", x: 0.54, y: 0.42, type: "dest", risk: 0 },
-    { id: "dest_vad", name: "Vadinar Port", x: 0.52, y: 0.46, type: "dest", risk: 0 },
-    { id: "dest_mumbai", name: "Mumbai Port", x: 0.56, y: 0.56, type: "dest", risk: 0 },
-    { id: "dest_mang", name: "Mangalore Refinery", x: 0.58, y: 0.68, type: "dest", risk: 0 },
-    { id: "dest_kochi", name: "Kochi Refinery", x: 0.60, y: 0.78, type: "dest", risk: 0 },
-    { id: "dest_paradip", name: "Paradip Port", x: 0.74, y: 0.48, type: "dest", risk: 0 },
-    { id: "dest_vizag", name: "Vizag Port", x: 0.70, y: 0.58, type: "dest", risk: 0 },
+    { id: "dest_jam", name: "Jamnagar Hub", sub: "1,760 kbd", lon: 70.06, lat: 22.47, type: "dest", risk: 0 },
+    { id: "dest_vad", name: "Vadinar Port", sub: "Discharge", lon: 69.72, lat: 22.45, type: "dest", risk: 0 },
+    { id: "dest_mumbai", name: "Mumbai Port", sub: "250 kbd", lon: 72.84, lat: 18.94, type: "dest", risk: 0 },
+    { id: "dest_mang", name: "Mangalore / Padur Hub", sub: "MRPL + SPR", lon: 74.85, lat: 12.91, type: "dest", risk: 0 },
+    { id: "dest_kochi", name: "Kochi", sub: "310 kbd", lon: 76.26, lat: 9.93, type: "dest", risk: 0 },
+    { id: "dest_paradip", name: "Paradip Port", sub: "300 kbd", lon: 86.67, lat: 20.26, type: "dest", risk: 0 },
+    { id: "dest_vizag", name: "Vizag Port & SPR", sub: "HPCL + ISPRL", lon: 83.21, lat: 17.68, type: "dest", risk: 0 },
     
-    // Strategic Petroleum Reserve Caverns
-    { id: "spr_padur", name: "Padur SPR (2.5 MMT)", x: 0.64, y: 0.70, type: "spr", risk: 0 },
-    { id: "spr_mang", name: "Mangalore SPR (1.5 MMT)", x: 0.62, y: 0.64, type: "spr", risk: 0 },
-    { id: "spr_vizag", name: "Vizag SPR (1.33 MMT)", x: 0.76, y: 0.60, type: "spr", risk: 0 }
+    // Strategic Petroleum Reserve Cavern
+    { id: "spr_padur", name: "Padur SPR", sub: "2.5 MMT", lon: 74.78, lat: 13.23, type: "spr", risk: 0 },
+    { id: "spr_vizag", name: "Vizag SPR", sub: "1.33 MMT", lon: 83.25, lat: 17.72, type: "spr", risk: 0 }
   ];
 
   let nodes = JSON.parse(JSON.stringify(initialNodes));
 
   const edges = [
-    ["src_rt", "ck_hormuz"], ["src_bot", "ck_hormuz"],
-    ["src_yanbu", "ck_babel"], ["src_duqm", "dest_jam"],
+    ["src_houston", "ck_cape"], ["src_santos", "ck_cape"], ["ck_cape", "dest_jam"], ["ck_cape", "dest_mang"],
+    ["src_primorsk", "ck_suez"], ["ck_suez", "ck_babel"],
+    ["src_yanbu", "ck_babel"], ["ck_babel", "dest_jam"], ["ck_babel", "dest_kochi"],
+    ["src_rt", "ck_hormuz"], ["src_bot", "ck_hormuz"], ["src_duqm", "dest_jam"],
     ["ck_hormuz", "dest_jam"], ["ck_hormuz", "dest_vad"], ["ck_hormuz", "dest_mumbai"], ["ck_hormuz", "dest_mang"],
-    ["ck_babel", "dest_jam"], ["ck_babel", "dest_kochi"],
     ["ck_malacca", "dest_paradip"], ["ck_malacca", "dest_vizag"],
-    ["dest_mang", "spr_mang"], ["dest_mang", "spr_padur"], ["dest_vizag", "spr_vizag"]
+    ["dest_mang", "spr_padur"], ["dest_vizag", "spr_vizag"]
   ];
 
-  let twinAnim = 0;
+  function renderTwin() {
+    // 1. Render Markers with zero-size anchor using projectWorld
+    markersLayer.innerHTML = "";
+    nodes.forEach(n => {
+      let dotColor = "#10B981";
+      if (n.risk > 0.4) dotColor = "#EF4444";
+      else if (n.type === "country") dotColor = "#38BDF8";
+      else if (n.type === "choke") dotColor = "#F59E0B";
+      else if (n.type === "spr") dotColor = "#E11D48";
 
-  function drawTwinMap() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const w = canvas.width;
-    const h = canvas.height;
+      const nodeWithColor = { ...n, color: dotColor, isChoke: n.risk > 0.4 || n.type === 'choke' };
+      const el = createMarkerElement(nodeWithColor, false, projectWorld);
+      markersLayer.appendChild(el);
+    });
 
-    // Coastline Contours
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.lineWidth = 1.5;
-
-    // Persian Gulf Coast
-    ctx.beginPath();
-    ctx.moveTo(w * 0.10, h * 0.20);
-    ctx.lineTo(w * 0.25, h * 0.35);
-    ctx.lineTo(w * 0.32, h * 0.36); // Hormuz point
-    ctx.lineTo(w * 0.36, h * 0.48); // Oman coast
-    ctx.stroke();
-
-    // Indian Coastline
-    ctx.beginPath();
-    ctx.moveTo(w * 0.50, h * 0.38);
-    ctx.lineTo(w * 0.54, h * 0.42);
-    ctx.lineTo(w * 0.56, h * 0.56);
-    ctx.lineTo(w * 0.60, h * 0.78);
-    ctx.lineTo(w * 0.64, h * 0.86);
-    ctx.lineTo(w * 0.68, h * 0.74);
-    ctx.lineTo(w * 0.74, h * 0.48);
-    ctx.stroke();
-    ctx.restore();
-
-    // Draw Edges
+    // 2. Render NetworkX Edge Lines (viewBox 0 0 100 100 with non-scaling-stroke)
+    routesSvg.innerHTML = "";
     edges.forEach(([uId, vId]) => {
       const u = nodes.find(n => n.id === uId);
       const v = nodes.find(n => n.id === vId);
       if (!u || !v) return;
 
-      ctx.beginPath();
-      ctx.moveTo(u.x * w, u.y * h);
-      ctx.lineTo(v.x * w, v.y * h);
-      
+      const a = projectWorld(u.lon, u.lat);
+      const b = projectWorld(v.lon, v.lat);
+
       const isRed = (u.risk > 0.4 || v.risk > 0.4);
-      ctx.strokeStyle = isRed ? "rgba(239, 68, 68, 0.7)" : "rgba(255, 255, 255, 0.12)";
-      ctx.lineWidth = isRed ? 2.5 : 1.2;
-      ctx.stroke();
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", a.left.toFixed(2));
+      line.setAttribute("y1", a.top.toFixed(2));
+      line.setAttribute("x2", b.left.toFixed(2));
+      line.setAttribute("y2", b.top.toFixed(2));
+      line.setAttribute("stroke", isRed ? "#EF4444" : "#5b6472");
+      line.setAttribute("stroke-width", isRed ? "0.35" : "0.15");
+      line.setAttribute("stroke-opacity", isRed ? "1.0" : "0.6");
+      line.setAttribute("vector-effect", "non-scaling-stroke");
+      routesSvg.appendChild(line);
     });
-
-    // Draw Nodes
-    nodes.forEach(n => {
-      const nx = n.x * w;
-      const ny = n.y * h;
-
-      // Pulse for active threat
-      if (n.risk > 0.4) {
-        ctx.beginPath();
-        ctx.arc(nx, ny, 14 + Math.sin(twinAnim * 4) * 4, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(239, 68, 68, 0.5)";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-
-      ctx.beginPath();
-      ctx.arc(nx, ny, n.type === "choke" ? 11 : (n.type === "spr" ? 9 : 8), 0, Math.PI * 2);
-      
-      if (n.risk > 0.4) ctx.fillStyle = "#EF4444";
-      else if (n.type === "country") ctx.fillStyle = "#38BDF8";
-      else if (n.type === "choke") ctx.fillStyle = "#F59E0B";
-      else if (n.type === "spr") ctx.fillStyle = "#E11D48";
-      else ctx.fillStyle = "#10B981";
-      
-      ctx.fill();
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      // Node Name Label
-      ctx.fillStyle = n.risk > 0.4 ? "#EF4444" : "#FFFFFF";
-      ctx.font = "bold 9.5px Plus Jakarta Sans";
-      ctx.fillText(n.name, nx + 12, ny + 3);
-    });
-
-    twinAnim += 0.016;
-    requestAnimationFrame(drawTwinMap);
   }
-  drawTwinMap();
+
+  renderTwin();
 
   // Cascade Trigger Button
   const btnCascade = document.getElementById("twin-propagate-btn");
@@ -1194,18 +1106,21 @@ function initDigitalTwinMap() {
   if (btnCascade) {
     btnCascade.addEventListener("click", () => {
       const selectedChoke = document.getElementById("twin-chokepoint-select").value;
-      const chokeNode = nodes.find(n => n.name.includes(selectedChoke));
-      
+      const chokeNode = nodes.find(n => n.name.includes(selectedChoke) || n.id.includes(selectedChoke.toLowerCase()));
+
       if (chokeNode) chokeNode.risk = 1.0;
       if (statusText) statusText.innerHTML = `<span class="text-red font-bold"><i class="fa-solid fa-radiation"></i> Interdiction Active at ${selectedChoke}: Propagating risk wave (Decay: 0.60/hop)...</span>`;
+      renderTwin();
 
       setTimeout(() => {
         nodes.filter(n => n.type === "dest").forEach(d => d.risk = 0.60);
+        renderTwin();
       }, 250);
 
       setTimeout(() => {
         nodes.filter(n => n.type === "spr").forEach(s => s.risk = 0.36);
-        if (statusText) statusText.innerHTML = `<span class="text-amber font-bold">Cascade Impacted Refineries & SPR Caverns (Jamnagar, Vadinar, Mangalore, Padur).</span>`;
+        if (statusText) statusText.innerHTML = `<span class="text-amber font-bold">Cascade Impacted Refineries & SPR Caverns (Jamnagar, Vadinar, Mangalore/Padur, Vizag).</span>`;
+        renderTwin();
       }, 500);
     });
   }
@@ -1216,6 +1131,7 @@ function initDigitalTwinMap() {
     btnReset.addEventListener("click", () => {
       nodes = JSON.parse(JSON.stringify(initialNodes));
       if (statusText) statusText.textContent = "Simulation Reset · Network calm. Click Trigger Cascade to evaluate interdiction.";
+      renderTwin();
     });
   }
 }

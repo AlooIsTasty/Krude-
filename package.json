@@ -1,0 +1,28 @@
+{
+  "name": "oosc",
+  "version": "1.0.0",
+  "description": "An AI-powered decision-support system and geospatial digital twin that continuously monitors geopolitical risk, models maritime disruption scenarios (e.g. Strait of Hormuz closure, Red Sea interdiction), quantifies macroeconomic impacts on India, and generates executable crude procurement rerouting and Strategic Petroleum Reserve (SPR) drawdown schedules.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlooIsTasty/Krude-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AlooIsTasty/Krude-/issues"
+  },
+  "homepage": "https://github.com/AlooIsTasty/Krude-#readme",
+  "dependencies": {
+    "d3-array": "^3.2.4",
+    "d3-geo": "^3.1.1",
+    "d3-interpolate": "^3.0.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  }
+}
