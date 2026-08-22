@@ -279,6 +279,14 @@ def get_corridor_timeline(corridor: str = Query("Hormuz", description="Corridor 
         "timeline": ts
     }
 
+@app.get("/api/risk/supply-disruption-probabilities")
+def get_supply_disruption_probabilities():
+    """
+    Live Supply-Disruption Probability (30-day horizon · by corridor and supplier).
+    Distinguishes gross chokepoint exposure from net sovereign vulnerability via pipeline bypass routing.
+    """
+    return risk_agent.calculate_supplier_probabilities()
+
 @app.get("/api/risk/empirical-validation")
 def get_empirical_validation(corridor: str = Query("Hormuz", description="Corridor to validate against Brent crude")):
     """

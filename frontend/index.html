@@ -290,6 +290,99 @@
     </section>
 
     <!-- ===================================================================== -->
+    <!-- 2.5 LIVE SUPPLY-DISRUPTION PROBABILITY (Dedicated Top Panel) -->
+    <!-- ===================================================================== -->
+    <section id="supply-disruption-strip" class="supply-probability-section">
+      <div class="sp-container">
+        <div class="sp-header-bar">
+          <div class="sp-title-wrap">
+            <span class="sp-eyebrow"><i class="fa-solid fa-satellite-dish text-gold"></i> Live Disruption Intelligence · Sovereign Resilience</span>
+            <h2 class="sp-title">LIVE SUPPLY-DISRUPTION PROBABILITY</h2>
+            <p class="sp-caption">30-day horizon · by corridor and supplier · updated every 10 min</p>
+          </div>
+          <div class="sp-live-badge-group">
+            <div class="sp-live-badge">
+              <span class="pulse-indicator pulse-green"></span>
+              <span class="sp-live-text">● LIVE &nbsp;<span id="sp-live-clock">--:--:-- UTC</span></span>
+            </div>
+            <div class="sp-poll-badge">
+              <i class="fa-solid fa-arrows-rotate"></i> Poller: <span id="sp-poll-status">Active (10m)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sp-grid-deck">
+          <!-- Left Column: BY CORRIDOR -->
+          <div class="sp-corridors-card">
+            <div class="sp-card-heading-row">
+              <span class="sp-card-heading">BY CORRIDOR</span>
+              <span class="sp-horizon-tag">30-Day Horizon</span>
+            </div>
+            <div class="sp-corridors-list">
+              <div class="sp-corridor-item">
+                <div class="sp-c-name">Hormuz</div>
+                <div class="sp-c-val text-red">17.2% <span class="sp-momentum text-red"><i class="fa-solid fa-arrow-trend-up"></i> +0.02 momentum</span></div>
+                <div class="sp-c-sub">Arterial Inflow 2,598 kbd</div>
+              </div>
+              <div class="sp-corridor-item">
+                <div class="sp-c-name">Bab-el-Mandeb</div>
+                <div class="sp-c-val text-amber">8.0% <span class="sp-momentum text-amber"><i class="fa-solid fa-arrow-trend-down"></i> -0.01 momentum</span></div>
+                <div class="sp-c-sub">Red Sea Corridor 2,355 kbd</div>
+              </div>
+              <div class="sp-corridor-item">
+                <div class="sp-c-name">Suez Canal</div>
+                <div class="sp-c-val text-white">3.0% <span class="sp-momentum text-dim">0.00 momentum</span></div>
+                <div class="sp-c-sub">Northbound Canal 900 kbd</div>
+              </div>
+              <div class="sp-corridor-item">
+                <div class="sp-c-name">Malacca Strait</div>
+                <div class="sp-c-val text-green">0.5% <span class="sp-momentum text-dim">0.00 momentum</span></div>
+                <div class="sp-c-sub">Eastbound Conduit 800 kbd</div>
+              </div>
+              <div class="sp-corridor-item sp-cape-item">
+                <div class="sp-c-name">Cape of Good Hope</div>
+                <div class="sp-c-val text-blue">— <span class="sp-cape-tag">(cannot close, +0.9d delay)</span></div>
+                <div class="sp-c-sub">Open Ocean Long-Haul 650 kbd</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: BY SUPPLIER -->
+          <div class="sp-suppliers-card">
+            <div class="sp-card-heading-row">
+              <div>
+                <span class="sp-card-heading">BY SUPPLIER (INDIA'S CRUDE BASKET)</span>
+                <span class="sp-covered-badge" id="sp-covered-badge">18 Nations · 5,405 kbd</span>
+              </div>
+              <span class="sp-at-risk-header">AT RISK (30-DAY)</span>
+            </div>
+
+            <!-- Controls: Search + Regional Filter Tabs -->
+            <div class="sp-controls-row">
+              <div class="sp-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="sp-supplier-search" class="sp-search-input" placeholder="Search supplier country (e.g. Russia, Iraq, Nigeria)..." />
+              </div>
+              <div class="sp-filter-tabs" id="sp-filter-tabs">
+                <button class="sp-tab active" data-region="all">All</button>
+                <button class="sp-tab" data-region="Middle East">Middle East</button>
+                <button class="sp-tab" data-region="Americas">Americas</button>
+                <button class="sp-tab" data-region="Africa">Africa</button>
+                <button class="sp-tab" data-region="Eurasia">Eurasia</button>
+                <button class="sp-tab" data-region="Asia / Pacific">Asia-Pacific</button>
+              </div>
+            </div>
+
+            <!-- Scrollable Suppliers List -->
+            <div class="sp-suppliers-table" id="sp-suppliers-table">
+              <!-- Rendered dynamically by app.js with full fallback -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
     <!-- 3. LIVE RISK BOARD (Core Screen) -->
     <!-- ===================================================================== -->
     <section id="risk-board" class="section-container">

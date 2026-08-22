@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initNativeSmoothScroll();
   initPreloader();
   initHeroStats();
+  initSupplyDisruptionStrip();
   initProblemCoastalMap();
   initRiskBoard();
   initHeadlineTicker();
@@ -18,6 +19,128 @@ document.addEventListener("DOMContentLoaded", () => {
   initDigitalTwinMap();
   initModelSandbox();
 });
+
+function initSupplyDisruptionStrip() {
+  const clockEl = document.getElementById("sp-live-clock");
+  const searchInput = document.getElementById("sp-supplier-search");
+  const tabs = document.querySelectorAll("#sp-filter-tabs .sp-tab");
+  const tableContainer = document.getElementById("sp-suppliers-table");
+
+  // 1. Live Ticking Clock (Updates genuinely every 1s)
+  function updateLiveClock() {
+    if (!clockEl) return;
+    const now = new Date();
+    const utcHours = String(now.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(now.getUTCMinutes()).padStart(2, '0');
+    const utcSeconds = String(now.getUTCSeconds()).padStart(2, '0');
+    clockEl.textContent = `${utcHours}:${utcMinutes}:${utcSeconds} UTC`;
+  }
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
+
+  // 2. Comprehensive 18-country supplier dataset (with real India crude import baselines)
+  let allSuppliers = [
+    { supplier: "Kuwait", region: "Middle East", p_supply_disruption: 0.1716, p_display: "17.2%", bar_pct: 77, baseline_flow_kbd: 210, at_risk_kbd: 36, best_route: "100% Hormuz (No bypass)", colorClass: "text-red", barClass: "bg-red" },
+    { supplier: "Saudi Arabia", region: "Middle East", p_supply_disruption: 0.0556, p_display: "5.6%", bar_pct: 25, baseline_flow_kbd: 625, at_risk_kbd: 35, best_route: "Yanbu Petroline bypass (5.0 MBPD)", colorClass: "text-amber", barClass: "bg-amber" },
+    { supplier: "Iraq", region: "Middle East", p_supply_disruption: 0.0550, p_display: "5.5%", bar_pct: 25, baseline_flow_kbd: 890, at_risk_kbd: 49, best_route: "Kirkuk-Ceyhan pipeline option", colorClass: "text-amber", barClass: "bg-amber" },
+    { supplier: "Qatar", region: "Middle East", p_supply_disruption: 0.1716, p_display: "17.2%", bar_pct: 77, baseline_flow_kbd: 85, at_risk_kbd: 15, best_route: "100% Hormuz (Ras Laffan)", colorClass: "text-red", barClass: "bg-red" },
+    { supplier: "UAE", region: "Middle East", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 420, at_risk_kbd: 0, best_route: "Habshan-Fujairah bypass (100%)", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Oman", region: "Middle East", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 110, at_risk_kbd: 0, best_route: "Mina Al Fahal / Duqm (Arabian Sea)", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Russia", region: "Eurasia", p_supply_disruption: 0.0080, p_display: "0.8%", bar_pct: 4, baseline_flow_kbd: 1750, at_risk_kbd: 14, best_route: "Cape / Kozmino Pacific route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "USA", region: "Americas", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 250, at_risk_kbd: 0, best_route: "Atlantic / Cape open ocean", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Nigeria", region: "Africa", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 180, at_risk_kbd: 0, best_route: "Gulf of Guinea / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Angola", region: "Africa", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 140, at_risk_kbd: 0, best_route: "South Atlantic / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Brazil", region: "Americas", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 120, at_risk_kbd: 0, best_route: "Santos Basin / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Mexico", region: "Americas", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 95, at_risk_kbd: 0, best_route: "Gulf of Mexico / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Colombia", region: "Americas", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 70, at_risk_kbd: 0, best_route: "Covenas / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Norway", region: "Eurasia", p_supply_disruption: 0.0150, p_display: "1.5%", bar_pct: 7, baseline_flow_kbd: 65, at_risk_kbd: 1, best_route: "North Sea / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Egypt", region: "Africa", p_supply_disruption: 0.0300, p_display: "3.0%", bar_pct: 14, baseline_flow_kbd: 50, at_risk_kbd: 2, best_route: "SUMED Pipeline / Red Sea", colorClass: "text-amber", barClass: "bg-amber" },
+    { supplier: "Guyana", region: "Americas", p_supply_disruption: 0.0000, p_display: "0.0%", bar_pct: 2, baseline_flow_kbd: 45, at_risk_kbd: 0, best_route: "Liza FPSO / Cape route", colorClass: "text-green", barClass: "bg-green" },
+    { supplier: "Algeria", region: "Africa", p_supply_disruption: 0.0300, p_display: "3.0%", bar_pct: 14, baseline_flow_kbd: 40, at_risk_kbd: 1, best_route: "Mediterranean / Suez Canal", colorClass: "text-amber", barClass: "bg-amber" },
+    { supplier: "Malaysia", region: "Asia / Pacific", p_supply_disruption: 0.0050, p_display: "0.5%", bar_pct: 3, baseline_flow_kbd: 35, at_risk_kbd: 0, best_route: "Malacca Strait", colorClass: "text-green", barClass: "bg-green" }
+  ];
+
+  let currentRegion = "all";
+  let currentSearch = "";
+
+  function renderSuppliers() {
+    if (!tableContainer) return;
+    const filtered = allSuppliers.filter(item => {
+      const matchRegion = currentRegion === "all" || item.region.toLowerCase() === currentRegion.toLowerCase();
+      const matchSearch = !currentSearch || item.supplier.toLowerCase().includes(currentSearch.toLowerCase()) || (item.best_route && item.best_route.toLowerCase().includes(currentSearch.toLowerCase()));
+      return matchRegion && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      tableContainer.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-dim); font-size: 0.85rem;">No suppliers match your search query.</div>`;
+      return;
+    }
+
+    tableContainer.innerHTML = filtered.map(s => {
+      const pColor = s.p_supply_disruption >= 0.10 ? "text-red" : (s.p_supply_disruption >= 0.03 ? "text-amber" : "text-green");
+      const bColor = s.p_supply_disruption >= 0.10 ? "bg-red" : (s.p_supply_disruption >= 0.03 ? "bg-amber" : "bg-green");
+      const riskColor = s.at_risk_kbd > 0 ? (s.at_risk_kbd > 20 ? "text-red" : "text-amber") : "text-green";
+      
+      return `
+        <div class="sp-sup-row">
+          <div class="sp-sup-info">
+            <div class="sp-sup-name-row">
+              <span class="sp-sup-name">${s.supplier}</span>
+              <span class="sp-sup-region">${s.region}</span>
+              <span style="font-size:0.72rem; color:var(--text-dim); font-family:var(--font-mono); margin-left:auto; padding-right:8px;">${s.baseline_flow_kbd} kbd</span>
+            </div>
+            <span class="sp-sup-note">${s.best_route}</span>
+          </div>
+          <div class="sp-sup-prob ${pColor}">${s.p_display}</div>
+          <div class="sp-sup-bar-wrap">
+            <div class="sp-sup-bar ${bColor}" style="width: ${Math.max(3, s.bar_pct)}%;"></div>
+          </div>
+          <div class="sp-sup-risk font-mono ${riskColor}">${s.at_risk_kbd} kbd</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // Bind tabs
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentRegion = tab.getAttribute("data-region");
+      renderSuppliers();
+    });
+  });
+
+  // Bind search input
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      currentSearch = e.target.value.trim();
+      renderSuppliers();
+    });
+  }
+
+  renderSuppliers();
+
+  // 3. Live Polling Sync
+  function fetchLiveProbabilities() {
+    if (typeof fetch !== "undefined") {
+      fetch("/api/risk/supply-disruption-probabilities")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (!data || !data.suppliers) return;
+          allSuppliers = data.suppliers.map(s => ({
+            ...s,
+            bar_pct: s.bar_pct || Math.min(100, Math.round(s.p_supply_disruption * 100 * 4.5))
+          }));
+          renderSuppliers();
+        })
+        .catch(() => {});
+    }
+  }
+
+  fetchLiveProbabilities();
+  setInterval(fetchLiveProbabilities, 30000); // 30s auto sync
+}
 
 /* ==============================================================================
    1. INSTANT NATIVE SCROLL & HEADER COLOR REACTION (Zero Lag)

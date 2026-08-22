@@ -710,6 +710,381 @@ body {
 }
 
 /* ==============================================================================
+   4.5 LIVE SUPPLY-DISRUPTION PROBABILITY STRIP (Dedicated Top Panel)
+   ============================================================================== */
+.supply-probability-section {
+    background: #080A0F;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 36px 0;
+    position: relative;
+    z-index: 10;
+}
+
+.sp-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.sp-header-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.sp-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sp-eyebrow {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-amber);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sp-title {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text-pure);
+}
+
+.sp-caption {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.sp-live-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sp-live-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #10B981;
+}
+
+.sp-poll-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.sp-grid-deck {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 24px;
+}
+
+.sp-corridors-card,
+.sp-suppliers-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sp-card-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sp-card-heading {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+}
+
+.sp-horizon-tag {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+}
+
+.sp-covered-badge {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent-amber);
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    margin-left: 8px;
+}
+
+.sp-at-risk-header {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+}
+
+.sp-corridors-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.sp-corridor-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform var(--transition-snappy), border-color var(--transition-snappy);
+}
+
+.sp-corridor-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.sp-cape-item {
+    grid-column: span 2;
+}
+
+.sp-c-name {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.sp-c-val {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.sp-momentum {
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.sp-c-sub {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+}
+
+.sp-cape-tag {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Controls: Search & Tabs */
+.sp-controls-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sp-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.sp-search-wrap i {
+    position: absolute;
+    left: 12px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+}
+
+.sp-search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 7px 12px 7px 32px;
+    font-size: 0.82rem;
+    color: var(--text-pure);
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color var(--transition-snappy);
+}
+
+.sp-search-input:focus {
+    border-color: var(--accent-amber);
+}
+
+.sp-filter-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.sp-tab {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-snappy);
+}
+
+.sp-tab:hover {
+    color: var(--text-pure);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.sp-tab.active {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: var(--accent-amber);
+    color: var(--accent-amber);
+}
+
+/* Scrollable Suppliers List */
+.sp-suppliers-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.sp-suppliers-table::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sp-suppliers-table::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-pill);
+}
+
+.sp-sup-row {
+    display: grid;
+    grid-template-columns: 2.2fr 0.9fr 1.2fr 0.9fr;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    transition: transform var(--transition-snappy), border-color var(--transition-snappy);
+}
+
+.sp-sup-row:hover {
+    transform: translateX(2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.sp-sup-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sp-sup-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sp-sup-name {
+    font-weight: 600;
+    color: var(--text-pure);
+}
+
+.sp-sup-region {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.sp-sup-note {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+.sp-sup-prob {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.sp-sup-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.sp-sup-bar {
+    height: 100%;
+    border-radius: var(--radius-pill);
+}
+
+.sp-sup-risk {
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* ==============================================================================
    5. THE PROBLEM (Pinned Section with Map & 3 Narrative Beats)
    ============================================================================== */
 .problem-pinned-section {
