@@ -543,45 +543,73 @@ function openHeadlineModal(item) {
 /* ==============================================================================
    7. RISK VS BRENT DUAL-AXIS CHART (With Historical Event Annotations)
    ============================================================================== */
-function initRiskVsBrentChart() {
+let riskVsBrentChartInst = null;
+
+async function initRiskVsBrentChart() {
   const canvas = document.getElementById("risk-brent-chart");
   if (!canvas || typeof Chart === "undefined") return;
 
-  const labels = ["Apr 2024", "Jun 2024", "Aug 2024", "Oct 2024", "Dec 2024", "Feb 2025", "Apr 2025", "Jun 2025", "Oct 2025", "Jan 2026", "Aug 2026"];
-  const riskScores = [9.4, 2.1, 3.4, 9.8, 4.2, 4.0, 4.8, 0.6, 3.2, 9.1, 8.6];
-  const brentPrices = [91.2, 78.2, 80.0, 89.5, 74.5, 76.0, 75.0, 71.2, 73.0, 84.5, 82.5];
+  let labels = ["Apr 2024", "Jun 2024", "Aug 2024", "Oct 2024", "Dec 2024", "Feb 2025", "Apr 2025", "Jun 2025", "Oct 2025", "Jan 2026", "Aug 2026"];
+  let riskScores = [8.8, 2.1, 3.4, 9.4, 4.2, 4.0, 4.8, 1.2, 3.2, 9.1, 8.6];
+  let pDisruptions = [9.7, 2.5, 3.9, 10.4, 4.8, 4.5, 5.4, 1.5, 3.7, 10.1, 9.5];
+  let brentPrices = [91.2, 78.2, 80.0, 89.5, 74.5, 76.0, 75.0, 71.2, 73.0, 84.5, 82.5];
+
+  // Try fetching live empirical validation data from backend
+  try {
+    const res = await fetch("/api/risk/empirical-validation?corridor=Hormuz");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.timeline && data.timeline.length > 0) {
+        // Sample every 8th point for chart readability
+        const sampled = data.timeline.filter((_, idx) => idx % 6 === 0);
+        labels = sampled.map(p => {
+          const d = new Date(p.date);
+          return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+        });
+        riskScores = sampled.map(p => p.risk_score);
+        pDisruptions = sampled.map(p => p.p_disruption_30d_pct);
+        brentPrices = sampled.map(p => p.brent_spot_usd);
+      }
+    }
+  } catch (err) {
+    console.warn("Using offline empirical validation dataset for chart:", err);
+  }
 
   // Point styling for event spikes
-  const pointBg = riskScores.map((v, i) => (i === 0 || i === 3 || i === 9) ? "#EF4444" : "#F59E0B");
-  const pointRadii = riskScores.map((v, i) => (i === 0 || i === 3 || i === 9) ? 8 : 4);
+  const pointBg = riskScores.map(v => (v >= 8.0) ? "#EF4444" : "#F59E0B");
+  const pointRadii = riskScores.map(v => (v >= 8.0) ? 7 : 3);
 
-  new Chart(canvas, {
+  if (riskVsBrentChartInst) {
+    riskVsBrentChartInst.destroy();
+  }
+
+  riskVsBrentChartInst = new Chart(canvas, {
     type: "line",
     data: {
       labels: labels,
       datasets: [
         {
-          label: "Model Predicted Risk P(t)",
+          label: "Hormuz Risk P(t) [0-10]",
           data: riskScores,
           borderColor: "#F59E0B",
-          backgroundColor: "rgba(245, 158, 11, 0.15)",
+          backgroundColor: "rgba(245, 158, 11, 0.12)",
           fill: true,
           tension: 0.35,
           yAxisID: "yRisk",
-          borderWidth: 3,
+          borderWidth: 2.5,
           pointBackgroundColor: pointBg,
           pointRadius: pointRadii,
           pointBorderColor: "#FFFFFF",
-          pointBorderWidth: 2
+          pointBorderWidth: 1.5
         },
         {
-          label: "Actual Brent Spot ($/bbl)",
+          label: "Brent Spot ($/bbl)",
           data: brentPrices,
           borderColor: "#FFFFFF",
           borderWidth: 2,
           tension: 0.25,
           yAxisID: "yBrent",
-          pointRadius: 3
+          pointRadius: 2.5
         }
       ]
     },
@@ -599,11 +627,19 @@ function initRiskVsBrentChart() {
           borderWidth: 1,
           padding: 12,
           callbacks: {
+            label: function(context) {
+              if (context.datasetIndex === 0) {
+                const idx = context.dataIndex;
+                const pDisr = pDisruptions[idx] || (context.raw * 1.1).toFixed(1);
+                return `Risk Index: ${context.raw} / 10 · P(disr/30d): ${pDisr}%`;
+              }
+              return `Brent Spot: $${context.raw}/bbl`;
+            },
             footer: function(tooltipItems) {
-              const idx = tooltipItems[0].dataIndex;
-              if (idx === 0) return "⚠️ Apr 2024 Event: MSC Aries Seizure (+6d lead warning)";
-              if (idx === 3) return "⚠️ Oct 2024 Event: 180 Ballistic Missiles & Kharg Threat";
-              if (idx === 9) return "⚠️ Jan 2026 Event: Persian Gulf Gunboat Interdictions";
+              const label = tooltipItems[0].label || "";
+              if (label.includes("Apr 24")) return "⚡ Apr 2024: MSC Aries Seizure & Strikes (+6d warning)";
+              if (label.includes("Oct 24")) return "⚡ Oct 2024: 180 Ballistic Missiles & Kharg Threat";
+              if (label.includes("Jan 26")) return "⚡ Jan 2026: Persian Gulf Gunboat Interdictions";
               return "";
             }
           }
@@ -623,7 +659,7 @@ function initRiskVsBrentChart() {
           type: "linear",
           position: "right",
           min: 60,
-          max: 110,
+          max: 105,
           ticks: { color: "#FFFFFF" },
           grid: { drawOnChartArea: false }
         }

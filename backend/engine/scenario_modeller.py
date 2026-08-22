@@ -10,6 +10,15 @@ except ImportError:
     except ImportError:
         from database import db
 
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+# Verified Constants (EIA, PPAC, ISPRL, RBI Provenance from assumptions.yaml)
+GLOBAL_SUPPLY_KBD = 102800.0   # EIA STEO World Liquids Supply (~102.8 MBPD)
+BASE_BRENT = 82.50             # ICE Brent 12m rolling median ($/bbl) / PPAC Indian Basket
+SPR_KB = 39470.0               # ISPRL Phase I Cavern Capacity (39.47 Million Barrels)
+SPR_MAX_DRAW_KBD = 450.0       # ISPRL Max Simultaneous Pipeline Evacuation Rate (kbd)
+USD_INR = 84.00                # RBI Reference Rate (₹/$ Spot)
+
 # Canonical corridor exposures (in kbd) based on 3-month trailing imports
 CORRIDOR_BASELINE_EXPOSURE_KBD = {
     "hormuz": 2598.3,
@@ -20,7 +29,7 @@ CORRIDOR_BASELINE_EXPOSURE_KBD = {
     "cape_of_good_hope": 650.0
 }
 
-TOTAL_INDIA_IMPORT_DEMAND_MBPD = 5.405 # ~5.4 MBPD crude imports
+TOTAL_INDIA_IMPORT_DEMAND_MBPD = 5.405 # ~5.4 MBPD crude imports per PPAC
 
 def run_scenario(chokepoint: str, phi: float, duration_days: int) -> Dict[str, Any]:
     """

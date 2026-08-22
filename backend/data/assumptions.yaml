@@ -184,3 +184,28 @@ maritime_logistics:
       deadweight_tonnage: 110000
       baseline_daily_charter_usd: 24000
     # SOURCE: Baltic Exchange Dirty Tanker Index (BDTI) chartering baselines
+
+# ------------------------------------------------------------------------------
+# 8. MACRO & SPR SIMULATION CONSTANTS (VERIFIED EIA, PPAC, ISPRL & RBI BENCHMARKS)
+# ------------------------------------------------------------------------------
+macro_simulation_constants:
+  GLOBAL_SUPPLY_KBD: 102800.0
+  # VALUE: 102,800 kbd (~102.8 MBPD total global liquids supply)
+  # SOURCE: US Energy Information Administration (EIA) STEO & IEA Oil Market Report (2024-2026 baseline)
+
+  BASE_BRENT: 82.50
+  # VALUE: $82.50 / barrel
+  # SOURCE: ICE Brent 12-month rolling median reference price / PPAC Indian Crude Basket (~$81.50–$83.00/bbl)
+
+  SPR_KB: 39470.0
+  # VALUE: 39,470 thousand barrels (39.47 Million Barrels / 5.33 MMT ISPRL Phase I capacity)
+  # BREAKDOWN: Visakhapatnam (9,770 kb) + Mangalore (11,000 kb) + Padur (18,700 kb)
+  # SOURCE: Indian Strategic Petroleum Reserves Limited (ISPRL) & MoPNG Annual Report
+
+  SPR_MAX_DRAW_KBD: 450.0
+  # VALUE: 450.0 kbd (~0.45 MBPD maximum simultaneous hydraulic pipeline evacuation rate)
+  # SOURCE: ISPRL Operational Engineering Specifications & HPCL/MRPL refinery pipeline limits
+
+  USD_INR: 84.00
+  # VALUE: 84.00 INR per USD
+  # SOURCE: Reserve Bank of India (RBI) Reference Rate & Forex Spot Trading Band (2024-2026)

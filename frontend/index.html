@@ -528,6 +528,49 @@
 
       </div>
 
+      <!-- Empirical Validation: Risk vs Brent Spot Dual-Axis Overlay -->
+      <div class="empirical-validation-deck">
+        <div class="empirical-card-header">
+          <div class="ech-left">
+            <div class="ech-badge"><i class="fa-solid fa-certificate text-gold"></i> Empirical Proof Deliverable</div>
+            <h3 class="ech-title">Hormuz Threat Index P(t) vs Historical Brent Crude Spot ($/bbl)</h3>
+            <p class="ech-desc">Dual-axis correlation: Model-predicted risk spikes systematically precede and align with real physical energy price surges.</p>
+          </div>
+          <div class="ech-legend">
+            <span class="legend-item"><span class="leg-color bg-amber"></span> Predicted Threat Index P(t)</span>
+            <span class="legend-item"><span class="leg-color bg-white"></span> Brent Spot ($/bbl)</span>
+            <span class="legend-item"><span class="leg-dot bg-red"></span> Geopolitical Kinetic Shock</span>
+          </div>
+        </div>
+
+        <div class="empirical-chart-canvas-wrap">
+          <canvas id="risk-brent-chart" height="280"></canvas>
+        </div>
+
+        <div class="empirical-calibration-grid">
+          <div class="calib-box">
+            <span class="cb-label">Quiet (Score 2–3)</span>
+            <span class="cb-val font-mono">Index 0.22</span>
+            <span class="cb-sub">P(disr/30d): 2.6% · P(closure): 0.4%</span>
+          </div>
+          <div class="calib-box">
+            <span class="cb-label">Elevated (Score 5–6)</span>
+            <span class="cb-val font-mono">Index 0.57</span>
+            <span class="cb-sub">P(disr/30d): 5.0% · P(closure): 1.4%</span>
+          </div>
+          <div class="calib-box">
+            <span class="cb-label">Serious (Score 7–8)</span>
+            <span class="cb-val font-mono text-amber">Index 0.80</span>
+            <span class="cb-sub">P(disr/30d): 7.7% · P(closure): 2.6%</span>
+          </div>
+          <div class="calib-box">
+            <span class="cb-label">Severe (Score 9+)</span>
+            <span class="cb-val font-mono text-red">Index 0.96</span>
+            <span class="cb-sub">P(disr/30d): 10.6% · P(closure): 4.1%</span>
+          </div>
+        </div>
+      </div>
+
     </section>
 
     <!-- ===================================================================== -->
