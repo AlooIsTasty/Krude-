@@ -86,6 +86,13 @@ class ReserveDrawdownRequest(BaseModel):
     safety_floor_days: float = Field(3.0, ge=0.0, le=9.0)
     disruption_duration_days: int = Field(30, ge=1, le=180)
 
+class ReserveLPOptimizeRequest(BaseModel):
+    duration_days: int = Field(60, ge=10, le=180)
+    gross_blocked_kbd: float = Field(1930.0, ge=0.0, le=5405.0)
+    p_hormuz: float = Field(0.88, ge=0.0, le=1.0)
+    cape_arrival_day: int = Field(35, ge=10, le=60)
+    cape_rerouted_kbd: float = Field(1100.0, ge=0.0, le=3000.0)
+
 class UnifiedStateRequest(BaseModel):
     selected_corridor: str = "Hormuz"
     disruption_severity_pct: float = 50.0
@@ -363,6 +370,21 @@ def calculate_reserve_drawdown(req: ReserveDrawdownRequest):
     return spr_optimiser.calculate_drawdown(
         safety_floor_days=req.safety_floor_days,
         disruption_duration_days=req.disruption_duration_days
+    )
+
+@app.post("/api/reserve/optimize-lp")
+def optimize_reserve_lp(req: ReserveLPOptimizeRequest):
+    """
+    Block 4: Strategic Petroleum Reserve LP Optimization
+    Solves min sum(shortfall_t * VoLL + d_t * opportunity_cost)
+    s.t. R_{t+1} = R_t - d_t, 0 <= d_t <= SPR_MAX_DRAW_KBD, R_t >= R_min + P_hormuz * tail_gap
+    """
+    return spr_optimiser.optimize_drawdown_lp(
+        duration_days=req.duration_days,
+        gross_blocked_kbd=req.gross_blocked_kbd,
+        p_hormuz=req.p_hormuz,
+        cape_arrival_day=req.cape_arrival_day,
+        cape_rerouted_kbd=req.cape_rerouted_kbd
     )
 
 @app.post("/api/digital-twin/state")

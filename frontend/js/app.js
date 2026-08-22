@@ -751,15 +751,59 @@ function executeScenario() {
   renderSupplyGapChart(duration, dailyDeficitKbd);
 }
 
-function renderSupplyGapChart(days, gapKbd) {
+async function renderSupplyGapChart(days, gapKbd) {
   const canvas = document.getElementById("supply-gap-chart");
   if (!canvas || typeof Chart === "undefined") return;
 
   if (supplyGapChartInst) supplyGapChartInst.destroy();
 
-  const labels = Array.from({ length: Math.min(days, 30) }, (_, i) => `Day ${i + 1}`);
-  const baseDemand = Array(labels.length).fill(5405);
-  const available = Array(labels.length).fill(Math.max(2000, 5405 - gapKbd));
+  const T = Math.max(10, Math.min(days, 60));
+  const labels = Array.from({ length: T }, (_, i) => `Day ${i + 1}`);
+  const baseDemand = Array(T).fill(5405);
+
+  let sprDrawdown = [];
+  let available = [];
+  let remainingSprDays = [];
+
+  try {
+    const res = await fetch("/api/reserve/optimize-lp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        duration_days: T,
+        gross_blocked_kbd: gapKbd || 1930.0,
+        p_hormuz: 0.88,
+        cape_arrival_day: 35,
+        cape_rerouted_kbd: 1100.0
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.timeline && data.timeline.length > 0) {
+        available = data.timeline.map(p => p.available_supply_kbd);
+        sprDrawdown = data.timeline.map(p => p.spr_drawdown_kbd);
+        remainingSprDays = data.timeline.map(p => p.remaining_spr_days);
+      }
+    }
+  } catch (err) {
+    console.warn("Using offline Reserve LP curve calculation:", err);
+  }
+
+  // Fallback if API did not return array
+  if (available.length === 0) {
+    let currSpr = 39470.0;
+    const adaptiveFloor = 12450.0 + 0.88 * 6400.0; // ~18,082 kb
+    for (let t = 1; t <= T; t++) {
+      const rerouted = t < 30 ? 150 : (t <= 40 ? 150 + ((t - 30) / 10.0) * 950 : 1100);
+      const netDeficit = Math.max(0, (gapKbd || 1930) - rerouted);
+      const maxDraw = Math.max(0, currSpr - adaptiveFloor);
+      const draw = Math.min(450.0, netDeficit, maxDraw);
+      currSpr -= draw;
+      sprDrawdown.push(draw);
+      available.push(Math.round(5405 - (netDeficit - draw)));
+      remainingSprDays.push(+(currSpr / (5405 * 0.88)).toFixed(2));
+    }
+  }
 
   supplyGapChartInst = new Chart(canvas, {
     type: "line",
@@ -767,29 +811,85 @@ function renderSupplyGapChart(days, gapKbd) {
       labels: labels,
       datasets: [
         {
-          label: "Baseline Demand",
+          label: "Baseline Demand (5,405 kbd)",
           data: baseDemand,
-          borderColor: "#FFFFFF",
-          borderDash: [5, 5],
-          pointRadius: 0
+          borderColor: "rgba(255, 255, 255, 0.4)",
+          borderDash: [4, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          yAxisID: "ySupply"
         },
         {
-          label: "Available Supply",
+          label: "Net Available Supply (with LP Draw + Cape Arrivals)",
           data: available,
           borderColor: "#10B981",
-          backgroundColor: "rgba(239, 68, 68, 0.25)",
+          backgroundColor: "rgba(239, 68, 68, 0.20)",
           fill: "-1",
-          pointRadius: 0
+          borderWidth: 2.5,
+          tension: 0.2,
+          pointRadius: (ctx) => ctx.dataIndex === 34 ? 6 : 0,
+          pointBackgroundColor: "#3B82F6",
+          pointBorderColor: "#FFFFFF",
+          pointBorderWidth: 2,
+          yAxisID: "ySupply"
+        },
+        {
+          label: "Optimized SPR Drawdown d(t) [kbd]",
+          data: sprDrawdown,
+          borderColor: "#F59E0B",
+          backgroundColor: "rgba(245, 158, 11, 0.15)",
+          borderWidth: 2,
+          fill: true,
+          pointRadius: 0,
+          yAxisID: "yDraw"
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+          labels: { color: "#c9d1d9", boxWidth: 12, font: { size: 10 } }
+        },
+        tooltip: {
+          backgroundColor: "#151A23",
+          titleColor: "#FFFFFF",
+          bodyColor: "#E2E8F0",
+          borderColor: "rgba(255,255,255,0.15)",
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            footer: function(tooltipItems) {
+              const idx = tooltipItems[0].dataIndex;
+              if (idx === 34) return "⚓ Day 35: Cape of Good Hope VLCC Cargoes Land (+1,100 kbd) · SPR Tapers to 0";
+              if (idx < 32) return "⚡ Days 1–32: Strategic Reserve Front-Loaded Drawdown (450 kbd max)";
+              return "";
+            }
+          }
+        }
+      },
       scales: {
-        x: { ticks: { color: "#94A3B8" }, grid: { display: false } },
-        y: { min: 2000, max: 6000, ticks: { color: "#94A3B8" }, grid: { color: "rgba(255,255,255,0.05)" } }
+        x: { ticks: { color: "#94A3B8", maxTicksLimit: 12 }, grid: { color: "rgba(255,255,255,0.03)" } },
+        ySupply: {
+          type: "linear",
+          position: "left",
+          min: 3000,
+          max: 6000,
+          ticks: { color: "#10B981" },
+          grid: { color: "rgba(255,255,255,0.05)" }
+        },
+        yDraw: {
+          type: "linear",
+          position: "right",
+          min: 0,
+          max: 1200,
+          ticks: { color: "#F59E0B" },
+          grid: { drawOnChartArea: false }
+        }
       }
     }
   });

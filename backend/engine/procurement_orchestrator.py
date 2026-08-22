@@ -13,7 +13,13 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
-from engine.database import db
+try:
+    from engine.database import db
+except ImportError:
+    try:
+        from backend.engine.database import db
+    except ImportError:
+        from .database import db
 
 class AdaptiveProcurementOrchestrator:
     """

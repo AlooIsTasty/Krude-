@@ -216,6 +216,41 @@ class TestKrudeDigitalTwin(unittest.TestCase):
         bypass = mg.find_bypass_routes("Hormuz")
         self.assertGreater(len(bypass), 20)
 
+    def test_block4_reserve_lp_optimization(self):
+        """
+        Validates Block 4 Strategic Petroleum Reserve LP Optimization:
+        - Minimizes shortfall VoLL + opportunity cost
+        - R_{t+1} = R_t - d_t
+        - 0 <= d_t <= SPR_MAX_DRAW_KBD (450 kbd)
+        - Adaptive safety floor R_t >= R_min + P_hormuz * tail_gap
+        - Front-loaded drawdown tapering around Day 35 as Cape cargoes arrive
+        """
+        from engine.spr_optimiser import StrategicReserveOptimiser
+        spr = StrategicReserveOptimiser(self.data_dir)
+        res = spr.optimize_drawdown_lp(
+            duration_days=60,
+            gross_blocked_kbd=1930.0,
+            p_hormuz=0.88,
+            cape_arrival_day=35,
+            cape_rerouted_kbd=1100.0
+        )
+        self.assertEqual(res["status"], "OPTIMAL")
+        self.assertEqual(len(res["timeline"]), 60)
+        
+        # Test 1: Hydraulic Drawdown Bound (<= 450 kbd)
+        for p in res["timeline"]:
+            self.assertGreaterEqual(p["spr_drawdown_kbd"], 0.0)
+            self.assertLessEqual(p["spr_drawdown_kbd"], 450.0 + 1e-5)
+            self.assertGreaterEqual(p["remaining_spr_kb"], 18000.0) # Adaptive floor check
+        
+        # Test 2: Front-loaded drawdown on early crisis days
+        early_draws = [p["spr_drawdown_kbd"] for p in res["timeline"][:20]]
+        self.assertTrue(all(d == 450.0 for d in early_draws), "Early days must draw at maximum capacity")
+        
+        # Test 3: Tapering around and after day 35
+        late_draws = [p["spr_drawdown_kbd"] for p in res["timeline"][40:]]
+        self.assertLess(sum(late_draws), sum(early_draws), "Drawdown must taper as Cape cargoes arrive")
+
     def test_block6_assumptions_yaml(self):
         """Validates Block 6 assumptions.yaml structure and parameters."""
         import yaml
