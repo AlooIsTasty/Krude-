@@ -208,8 +208,8 @@ class RiskIntelligenceAgent:
 
     def fetch_gdelt_headlines(self) -> List[Dict[str, Any]]:
         """
-        Queries GDELT DOC 2.0 API for live headlines across the 5 corridors.
-        Respects GDELT rate limits (minimum 5s interval) and caches results.
+        Queries GDELT DOC 2.0 API using structured theme-batching (gdeltdoc) and direct fallback.
+        Deduplicates by article URL and scores every new headline with the fine-tuned Llama 3.2 3B model.
         """
         now = time.time()
         # Return cache if fetched within last 180 seconds
@@ -217,11 +217,77 @@ class RiskIntelligenceAgent:
             return self.cache_data["articles"]
 
         all_articles = []
+
+        # Strategy 1: gdeltdoc theme-batching & deduplication
+        try:
+            from gdeltdoc import GdeltDoc, Filters
+            from gdeltdoc.errors import RateLimitError
+            import pandas as pd
+
+            client = GdeltDoc()
+            themes_to_search = [
+                "ECON_SANCTIONS", "ENV_OIL", "FUELPRICES", "PIRACY", 
+                "MARITIME_INCIDENT", "ARMEDCONFLICT", "TRADE_DISPUTE", 
+                "MILITARY", "POLITICAL_TURMOIL", "TRADE_TARIFFS", 
+                "TAX_FNCACT", "MARITIME_TRANSPORT", "INFRASTRUCTURE_PORTS", 
+                "CRUDE_OIL", "ENERGY_SUPPLY", "SECURITY_SERVICES"
+            ]
+            core_keywords = [
+                "Iran", "US", "Hormuz", "Red Sea", "Bab-el-Mandeb", "Suez", 
+                "Malacca", "Cape of Good Hope", "tanker", "crude", "VLCC", 
+                "Suezmax", "Houthi", "Russia", "India", "Saudi", "Iraq", 
+                "Oman", "shadow fleet", "seizure", "missile", "drone", "tariffs", "OPEC"
+            ]
+            core_countries = [
+                "US", "IR", "SA", "AE", "YE", "EG", "SG", "IN", "RU", "IQ", "OM", "QA", "KW", "ZA", "MY"
+            ]
+
+            batch_frames = []
+            for theme in themes_to_search:
+                f = Filters(
+                    keyword=core_keywords[:6],  # Pass top core keywords to prevent query bloat
+                    theme=theme,
+                    country=core_countries[:7]  # Pass top chokepoint country codes per batch
+                )
+                try:
+                    df = client.article_search(f)
+                    if df is not None and not df.empty:
+                        batch_frames.append(df)
+                except RateLimitError:
+                    break
+                except Exception:
+                    pass
+
+            if batch_frames:
+                final_df = pd.concat(batch_frames, ignore_index=True)
+                if 'url' in final_df.columns:
+                    final_df = final_df.drop_duplicates(subset=['url'])
+
+                for _, row in final_df.iterrows():
+                    title = str(row.get('title', ''))
+                    if len(title) >= 15:
+                        matched_corridor = self._match_corridor(title)
+                        if matched_corridor:
+                            domain_str = str(row.get('domain', row.get('sourcecountry', 'GDELT')))
+                            evaluated = self._run_model_inference(title, matched_corridor, domain_str)
+                            all_articles.append(evaluated)
+
+                if all_articles:
+                    self.cache_data = {
+                        "last_updated": now,
+                        "source": "gdeltdoc_theme_batches",
+                        "articles": all_articles
+                    }
+                    self.last_fetch_time = now
+                    self._save_cache(self.cache_data)
+                    return all_articles
+        except Exception:
+            pass
+
+        # Strategy 2: Direct REST fallback to GDELT DOC 2.0 API
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) KrudeEnergySecurityAgent/1.0"
         }
-
-        # Query GDELT for oil and maritime headlines
         query_str = '(Hormuz OR "Bab-el-Mandeb" OR "Red Sea" OR Malacca OR "Cape of Good Hope" OR "Suez Canal") (oil OR tanker OR maritime OR crude)'
         encoded_query = urllib.parse.quote(query_str)
         url = f"https://api.gdeltproject.org/api/v2/doc/doc?query={encoded_query}&mode=artlist&maxrecords=25&format=json&sort=DateDesc"
@@ -232,7 +298,6 @@ class RiskIntelligenceAgent:
                 raw_data = response.json()
                 fetched = raw_data.get("articles", [])
                 
-                # Match articles to corridors and analyze with model
                 for art in fetched:
                     title = art.get("title", "")
                     if not title or len(title) < 15:
@@ -255,7 +320,7 @@ class RiskIntelligenceAgent:
         except Exception:
             pass
 
-        # If live fetch timed out or was rate-limited, fall back cleanly to seed/cached articles
+        # Strategy 3: Cached or seed articles if GDELT is rate-limiting
         self.last_fetch_time = now
         cached_articles = self.cache_data.get("articles", SEED_HEADLINES)
         return cached_articles

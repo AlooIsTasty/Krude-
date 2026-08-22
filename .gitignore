@@ -30,8 +30,8 @@ venv.bak/
 
 # Environment Variables & Secrets
 .env
-.env.local
-.env.*.local
+.env.*
+.env.example
 
 # Databases & Dynamic Data Caches
 *.duckdb
