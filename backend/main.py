@@ -34,7 +34,7 @@ if str(ROOT_DIR) not in sys.path:
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from engine.database import db
@@ -43,6 +43,7 @@ from engine.scenario_modeller import DisruptionScenarioModeller
 from engine.procurement_orchestrator import AdaptiveProcurementOrchestrator
 from engine.spr_optimiser import StrategicReserveOptimiser
 from engine.fine_tuning_adapter import AIModelManager
+from engine.live_poller import live_manager
 
 app = FastAPI(
     title="Krude - Energy Supply Chain Digital Twin",
@@ -58,6 +59,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Starts background GDELT live poller loop on server startup."""
+    live_manager.start_live_poller()
 
 # Initialize engines
 risk_agent = RiskIntelligenceAgent(DATA_DIR, MODELS_DIR)
@@ -321,12 +327,21 @@ def get_corridor_plot(corridor: str = Query("Hormuz", description="Corridor name
         pipeline.generate_svg_plot(svg_path, corridor=corridor)
         return FileResponse(svg_path, media_type="image/svg+xml")
 
+# ==============================================================================
+# BLOCK 5: FOUR CLEAN CORE ENDPOINTS (/risk, /scenario, /procure, /reserve)
+# ==============================================================================
+
+@app.get("/api/risk")
+@app.get("/risk")
+def get_clean_risk():
+    """Clean Endpoint 1: Live Corridor Risk Intelligence & Calibrated Threat Scores."""
+    return risk_agent.evaluate_all_corridors()
+
+@app.post("/api/scenario")
+@app.post("/scenario")
 @app.post("/api/scenario/simulate")
 def simulate_scenario(req: ScenarioSimRequest):
-    """
-    Component 2: Disruption Scenario Modeller (SIMULATED)
-    Calculates GDP, CAD, and refining utilization impact using rule-of-thumb formulas.
-    """
+    """Clean Endpoint 2: Disruption Scenario Modeller & Macroeconomic Shock."""
     return scenario_modeller.simulate(
         corridor=req.corridor,
         disruption_duration_days=req.disruption_duration_days,
@@ -337,24 +352,19 @@ def simulate_scenario(req: ScenarioSimRequest):
 
 @app.post("/api/procurement/rank")
 def rank_procurement(req: ProcurementRankRequest):
-    """
-    Component 3: Adaptive Procurement Orchestrator (REAL)
-    Ranks suppliers using live risk scores and multi-criteria formula.
-    """
+    """Component 3: Ranks suppliers using live risk scores and multi-criteria formula."""
     if req.corridor_risk_scores is None:
         risk_res = risk_agent.evaluate_all_corridors()
         scores = {c["corridor"]: c["risk_score"] for c in risk_res["corridors"]}
     else:
         scores = req.corridor_risk_scores
-
     return procurement_orchestrator.rank_suppliers(scores)
 
+@app.post("/api/procure")
+@app.post("/procure")
 @app.post("/api/procurement/optimize")
 def optimize_procurement(req: ProcurementOptimizeRequest):
-    """
-    Live Multi-Source Landed Cost Procurement Optimizer (REAL)
-    Allocates deficit volume using real Searoute freight, crude quality penalties, and liftable caps.
-    """
+    """Clean Endpoint 3: Adaptive Multi-Source Landed Procurement Optimizer."""
     return procurement_orchestrator.generate_procurement_plan(
         required_deficit_mbpd=req.required_deficit_mbpd,
         blocked_chokepoints=req.blocked_chokepoints,
@@ -363,19 +373,18 @@ def optimize_procurement(req: ProcurementOptimizeRequest):
 
 @app.post("/api/reserve/drawdown")
 def calculate_reserve_drawdown(req: ReserveDrawdownRequest):
-    """
-    Component 4: Strategic Reserve Optimisation Agent (SIMULATED)
-    Calculates max daily drawdown from 9.5-day baseline.
-    """
+    """Legacy simple reserve drawdown calculator."""
     return spr_optimiser.calculate_drawdown(
         safety_floor_days=req.safety_floor_days,
         disruption_duration_days=req.disruption_duration_days
     )
 
+@app.post("/api/reserve")
+@app.post("/reserve")
 @app.post("/api/reserve/optimize-lp")
 def optimize_reserve_lp(req: ReserveLPOptimizeRequest):
     """
-    Block 4: Strategic Petroleum Reserve LP Optimization
+    Clean Endpoint 4: Strategic Petroleum Reserve LP Optimization
     Solves min sum(shortfall_t * VoLL + d_t * opportunity_cost)
     s.t. R_{t+1} = R_t - d_t, 0 <= d_t <= SPR_MAX_DRAW_KBD, R_t >= R_min + P_hormuz * tail_gap
     """
@@ -386,6 +395,34 @@ def optimize_reserve_lp(req: ReserveLPOptimizeRequest):
         cape_arrival_day=req.cape_arrival_day,
         cape_rerouted_kbd=req.cape_rerouted_kbd
     )
+
+# ==============================================================================
+# BLOCK 5: LIVE STREAM & 60x REPLAY SIMULATION ENDPOINTS
+# ==============================================================================
+
+@app.get("/api/stream/live")
+@app.get("/api/stream/events")
+async def stream_live_events():
+    """
+    Server-Sent Events (SSE) live streaming endpoint.
+    Emits continuous real-time updates from the background poller and 60x replay engine.
+    """
+    q = live_manager.subscribe()
+
+    async def event_generator():
+        try:
+            # Initial handshake
+            init_msg = json.dumps({"status": "STREAM_CONNECTED", "timestamp": time.time()})
+            yield f"event: connected\ndata: {init_msg}\n\n"
+            while True:
+                msg = await q.get()
+                yield msg
+        except asyncio.CancelledError:
+            pass
+        finally:
+            live_manager.unsubscribe(q)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.post("/api/digital-twin/state")
 def get_unified_digital_twin_state(req: UnifiedStateRequest):

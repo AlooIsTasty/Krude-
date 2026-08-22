@@ -251,8 +251,29 @@ class TestKrudeDigitalTwin(unittest.TestCase):
         late_draws = [p["spr_drawdown_kbd"] for p in res["timeline"][40:]]
         self.assertLess(sum(late_draws), sum(early_draws), "Drawdown must taper as Cape cargoes arrive")
 
+    def test_block5_live_poller_engine(self):
+        """
+        Validates Block 5 Live Poller Loop:
+        - TF-IDF maritime domain keyword relevance scoring
+        - GDELT background poller activation & lifecycle
+        """
+        from engine.live_poller import LivePollerManager
+        mgr = LivePollerManager(self.data_dir)
+        
+        # Test 1: TF-IDF Relevance Scoring
+        score_high = mgr.compute_tfidf_relevance("IRGC naval forces seize oil tanker near Strait of Hormuz")
+        score_low = mgr.compute_tfidf_relevance("Global technology stocks trade higher after earnings report")
+        self.assertGreater(score_high, 5.0, "Maritime conflict headline must score high TF-IDF relevance")
+        self.assertEqual(score_low, 0.0, "Irrelevant headline must score 0.0 TF-IDF relevance")
+        
+        # Test 2: Poller Lifecycle
+        mgr.start_live_poller()
+        self.assertTrue(mgr.poller_active)
+        mgr.stop_live_poller()
+        self.assertFalse(mgr.poller_active)
+
     def test_block6_assumptions_yaml(self):
-        """Validates Block 6 assumptions.yaml structure and parameters."""
+        """Validates Block 6 assumptions.yaml structure, provenance citations, and constants."""
         import yaml
         yaml_path = self.data_dir / "assumptions.yaml"
         self.assertTrue(yaml_path.exists(), "assumptions.yaml must exist")
@@ -260,6 +281,13 @@ class TestKrudeDigitalTwin(unittest.TestCase):
         self.assertEqual(data["national_energy_baseline"]["total_crude_demand_mbpd"], 5.405)
         self.assertEqual(data["strategic_petroleum_reserve"]["baseline_spr_coverage_days"], 9.5)
         self.assertEqual(data["risk_pipeline_parameters"]["time_decay_half_life_days"], 7.0)
+        
+        # Block 4 & 5 parameter checks
+        self.assertIn("reserve_lp_optimization", data)
+        self.assertEqual(data["reserve_lp_optimization"]["voll_usd_per_barrel"], 200.0)
+        self.assertEqual(data["reserve_lp_optimization"]["cape_transit_days"], 35)
+        self.assertIn("live_stream_poller", data)
+        self.assertEqual(data["live_stream_poller"]["gdelt_poll_interval_seconds"], 600)
 
 if __name__ == "__main__":
     unittest.main()

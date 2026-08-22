@@ -209,3 +209,51 @@ macro_simulation_constants:
   USD_INR: 84.00
   # VALUE: 84.00 INR per USD
   # SOURCE: Reserve Bank of India (RBI) Reference Rate & Forex Spot Trading Band (2024-2026)
+
+# ------------------------------------------------------------------------------
+# 9. RESERVE LP OPTIMIZATION & ECONOMIC VALUATION CONSTANTS (BLOCK 4)
+# ------------------------------------------------------------------------------
+reserve_lp_optimization:
+  voll_usd_per_barrel: 200.0
+  # VALUE: $200.00 / barrel
+  # CONCEPT: Value of Lost Load (VoLL) — macroeconomic damage per barrel of unserved crude due to refinery throughput cuts
+  # SOURCE: NITI Aayog & IEA Energy Security Economic Loss Valuation Studies
+
+  opportunity_cost_usd_per_barrel: 18.0
+  # VALUE: $18.00 / barrel
+  # CONCEPT: Cost of depleting sovereign strategic buffer vs holding / future replenishment cost
+  # SOURCE: World Bank & ISPRL SPR Storage & Capital Depreciation Models
+
+  r_min_kb: 12450.0
+  # VALUE: 12,450 thousand barrels (~3.0 days import cover)
+  # CONCEPT: Inviolable cavern heel & sovereign baseline emergency floor
+  # SOURCE: ISPRL Technical Guidelines on Underground Rock Cavern Hydraulic Minimums
+
+  tail_gap_kb: 6400.0
+  # VALUE: 6,400 thousand barrels
+  # CONCEPT: Post-crisis tail vulnerability exposure buffer (P_hormuz * tail_gap)
+  # SOURCE: Indian Energy Security Council Strategic Planning Heuristic (8 days * 800 kbd residual gap)
+
+  cape_transit_days: 35
+  # VALUE: 35 days
+  # CONCEPT: Sailing lag from US Gulf / Brazil / West Africa via Cape of Good Hope to Indian West Coast ports (Jamnagar/Vadinar/Mangalore)
+  # SOURCE: Searoute marine distance graph (11,800 nautical miles @ 13.5 knots laden speed + 3 days port operations)
+
+  cape_rerouted_kbd: 1100.0
+  # VALUE: 1,100 kbd (~1.1 MBPD replacement crude flow landed in India)
+  # SOURCE: Spot VLCC charter capacity reallocation from Atlantic Basin producers to India
+
+# ------------------------------------------------------------------------------
+# 10. LIVE POLLER & SSE STREAM PARAMETERS (BLOCK 5)
+# ------------------------------------------------------------------------------
+live_stream_poller:
+  gdelt_poll_interval_seconds: 600
+  # VALUE: 600 seconds (10 minutes)
+  # CONCEPT: Periodic background news polling interval
+  # SOURCE: GDELT DOC 2.0 API rate-limiting guidelines & fair-use policy
+
+  tfidf_relevance_threshold: 4.0
+  # VALUE: 4.0 weighted domain keyword score
+  # CONCEPT: TF-IDF filter threshold for maritime & crude chokepoint relevance prior to LLM inference
+  # SOURCE: Krude Maritime Domain Lexicon Calibration
+
