@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initReserveChart();
   initDigitalTwinMap();
   initModelSandbox();
+  initLegalModals();
 });
 
 function initSupplyDisruptionStrip() {
@@ -1614,8 +1615,8 @@ function initDigitalTwinMap() {
     { id: "src_primorsk", name: "Primorsk (Baltic)", sub: "Russian Urals", lon: 28.60, lat: 60.36, type: "country", risk: 0 },
     { id: "src_rt", name: "Ras Tanura", sub: "Saudi Aramco", lon: 50.12, lat: 26.64, type: "country", risk: 0 },
     { id: "src_bot", name: "Basrah Port", sub: "SOMO Iraq", lon: 47.83, lat: 30.50, type: "country", risk: 0 },
-    { id: "src_yanbu", name: "Yanbu", sub: "Red Sea", lon: 38.06, lat: 24.08, type: "country", risk: 0 },
-    { id: "src_duqm", name: "Duqm Hub", sub: "Oman", lon: 57.70, lat: 19.66, type: "country", risk: 0 },
+    { id: "src_yanbu", name: "Yanbu", sub: "Red Sea Terminal", lon: 38.06, lat: 24.08, type: "country", risk: 0 },
+    { id: "src_duqm", name: "Duqm Hub", sub: "Oman (Direct Bypass)", lon: 57.70, lat: 19.66, type: "country", risk: 0 },
     
     // Critical Chokepoints
     { id: "ck_cape", name: "Cape of Good Hope", sub: "Chokepoint", lon: 18.47, lat: -34.35, type: "choke", risk: 0, isChoke: true },
@@ -1639,16 +1640,67 @@ function initDigitalTwinMap() {
   ];
 
   let nodes = JSON.parse(JSON.stringify(initialNodes));
+  let activeCascadeCorridor = null;
 
+  // Dedicated Oceanic Edges with Curve Offsets & Corridor Tagging
   const edges = [
-    ["src_houston", "ck_cape"], ["src_santos", "ck_cape"], ["ck_cape", "dest_jam"], ["ck_cape", "dest_mang"],
-    ["src_primorsk", "ck_suez"], ["ck_suez", "ck_babel"],
-    ["src_yanbu", "ck_babel"], ["ck_babel", "dest_jam"], ["ck_babel", "dest_kochi"],
-    ["src_rt", "ck_hormuz"], ["src_bot", "ck_hormuz"], ["src_duqm", "dest_jam"],
-    ["ck_hormuz", "dest_jam"], ["ck_hormuz", "dest_vad"], ["ck_hormuz", "dest_mumbai"], ["ck_hormuz", "dest_mang"],
-    ["ck_malacca", "dest_paradip"], ["ck_malacca", "dest_vizag"],
-    ["dest_mang", "spr_padur"], ["dest_vizag", "spr_vizag"]
+    // Cape of Good Hope longhaul routes (Atlantic -> Indian Ocean)
+    { u: "src_houston", v: "ck_cape", corridor: "Cape of Good Hope", curve: -15 },
+    { u: "src_santos", v: "ck_cape", corridor: "Cape of Good Hope", curve: -12 },
+    { u: "ck_cape", v: "dest_jam", corridor: "Cape of Good Hope", curve: -18 },
+    { u: "ck_cape", v: "dest_mang", corridor: "Cape of Good Hope", curve: -14 },
+
+    // Suez Canal & Mediterranean routes
+    { u: "src_primorsk", v: "ck_suez", corridor: "Suez", curve: 12 },
+    { u: "ck_suez", v: "ck_babel", corridor: "Suez", curve: 4 },
+
+    // Bab-el-Mandeb & Red Sea routes
+    { u: "src_yanbu", v: "ck_babel", corridor: "Bab-el-Mandeb", curve: 4 },
+    { u: "ck_babel", v: "dest_jam", corridor: "Bab-el-Mandeb", curve: -12 },
+    { u: "ck_babel", v: "dest_kochi", corridor: "Bab-el-Mandeb", curve: -8 },
+
+    // Hormuz routes (Persian Gulf -> Indian Refineries)
+    { u: "src_rt", v: "ck_hormuz", corridor: "Hormuz", curve: 3 },
+    { u: "src_bot", v: "ck_hormuz", corridor: "Hormuz", curve: 4 },
+    { u: "ck_hormuz", v: "dest_jam", corridor: "Hormuz", curve: -8 },
+    { u: "ck_hormuz", v: "dest_vad", corridor: "Hormuz", curve: -6 },
+    { u: "ck_hormuz", v: "dest_mumbai", corridor: "Hormuz", curve: -8 },
+    { u: "ck_hormuz", v: "dest_mang", corridor: "Hormuz", curve: -10 },
+
+    // Direct Arabian Sea Bypass
+    { u: "src_duqm", v: "dest_jam", corridor: "Direct", curve: -6 },
+
+    // Malacca Strait routes
+    { u: "ck_malacca", v: "dest_paradip", corridor: "Malacca", curve: 10 },
+    { u: "ck_malacca", v: "dest_vizag", corridor: "Malacca", curve: 8 },
+
+    // SPR Pipeline Links
+    { u: "dest_mang", v: "spr_padur", corridor: "SPR", curve: 0 },
+    { u: "dest_vizag", v: "spr_vizag", corridor: "SPR", curve: 0 }
   ];
+
+  function drawCurvedEdge(a, b, curveOffset = 0) {
+    const x1 = a.left;
+    const y1 = a.top;
+    const x2 = b.left;
+    const y2 = b.top;
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist === 0) return `M ${x1} ${y1}`;
+
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+
+    const nx = -dy / dist;
+    const ny = dx / dist;
+
+    const cx = midX + nx * curveOffset;
+    const cy = midY + ny * curveOffset;
+
+    return `M ${x1.toFixed(2)} ${y1.toFixed(2)} Q ${cx.toFixed(2)} ${cy.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+  }
 
   function renderTwin() {
     // 1. Render Markers with zero-size anchor using projectWorld
@@ -1665,54 +1717,100 @@ function initDigitalTwinMap() {
       markersLayer.appendChild(el);
     });
 
-    // 2. Render NetworkX Edge Lines (viewBox 0 0 100 100 with non-scaling-stroke)
+    // 2. Render Curved NetworkX Maritime Routes (SVG viewBox 0 0 100 100)
     routesSvg.innerHTML = "";
-    edges.forEach(([uId, vId]) => {
-      const u = nodes.find(n => n.id === uId);
-      const v = nodes.find(n => n.id === vId);
+    edges.forEach(e => {
+      const u = nodes.find(n => n.id === e.u);
+      const v = nodes.find(n => n.id === e.v);
       if (!u || !v) return;
 
       const a = projectWorld(u.lon, u.lat);
       const b = projectWorld(v.lon, v.lat);
 
-      const isRed = (u.risk > 0.4 || v.risk > 0.4);
+      const isInterdicted = activeCascadeCorridor && (e.corridor === activeCascadeCorridor || (activeCascadeCorridor === "Hormuz" && e.corridor === "SPR" && u.id === "dest_mang"));
 
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", a.left.toFixed(2));
-      line.setAttribute("y1", a.top.toFixed(2));
-      line.setAttribute("x2", b.left.toFixed(2));
-      line.setAttribute("y2", b.top.toFixed(2));
-      line.setAttribute("stroke", isRed ? "#EF4444" : "#5b6472");
-      line.setAttribute("stroke-width", isRed ? "0.35" : "0.15");
-      line.setAttribute("stroke-opacity", isRed ? "1.0" : "0.6");
-      line.setAttribute("vector-effect", "non-scaling-stroke");
-      routesSvg.appendChild(line);
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", drawCurvedEdge(a, b, e.curve || 0));
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", isInterdicted ? "#EF4444" : "#475569");
+      path.setAttribute("stroke-width", isInterdicted ? "0.45" : "0.18");
+      path.setAttribute("stroke-opacity", isInterdicted ? "1.0" : "0.55");
+      path.setAttribute("vector-effect", "non-scaling-stroke");
+      if (isInterdicted) {
+        path.setAttribute("stroke-dasharray", "1.5, 0.8");
+      }
+      routesSvg.appendChild(path);
     });
   }
 
   renderTwin();
 
-  // Cascade Trigger Button
+  // Cascade Trigger Button with Corridor-Specific Logic & Status Text
   const btnCascade = document.getElementById("twin-propagate-btn");
   const statusText = document.getElementById("twin-status-text");
+
+  const CORRIDOR_IMPACTS = {
+    "Hormuz": {
+      chokeId: "ck_hormuz",
+      origins: ["src_rt", "src_bot"],
+      dests: ["dest_jam", "dest_vad", "dest_mumbai", "dest_mang"],
+      sprs: ["spr_padur"],
+      statusHtml: `<span class="text-red font-bold"><i class="fa-solid fa-radiation"></i> Strait of Hormuz Interdiction Active: 2,598 kbd crude blocked (48.1% of Indian imports). Direct cascade impact on Jamnagar, Vadinar, Mumbai & Mangalore ISPRL Caverns.</span>`
+    },
+    "Bab-el-Mandeb": {
+      chokeId: "ck_babel",
+      origins: ["src_yanbu"],
+      dests: ["dest_jam", "dest_kochi"],
+      sprs: [],
+      statusHtml: `<span class="text-amber font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Bab-el-Mandeb Crisis Active: 2,355 kbd Red Sea crude flow disrupted. Rerouting via Cape of Good Hope (+12–14 days lag) impacting Kochi & Jamnagar.</span>`
+    },
+    "Suez": {
+      chokeId: "ck_suez",
+      origins: ["src_primorsk"],
+      dests: ["dest_jam", "dest_kochi"],
+      sprs: [],
+      statusHtml: `<span class="text-amber font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Suez Canal Obstruction Active: 900 kbd European & Mediterranean crude delayed. Diverting via Cape of Good Hope.</span>`
+    },
+    "Malacca": {
+      chokeId: "ck_malacca",
+      origins: [],
+      dests: ["dest_paradip", "dest_vizag"],
+      sprs: ["spr_vizag"],
+      statusHtml: `<span class="text-amber font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Malacca Strait Congestion Active: 800 kbd Russian Pacific & Southeast Asian imports delayed into Visakhapatnam & Paradip refineries.</span>`
+    }
+  };
 
   if (btnCascade) {
     btnCascade.addEventListener("click", () => {
       const selectedChoke = document.getElementById("twin-chokepoint-select").value;
-      const chokeNode = nodes.find(n => n.name.includes(selectedChoke) || n.id.includes(selectedChoke.toLowerCase()));
+      const config = CORRIDOR_IMPACTS[selectedChoke] || CORRIDOR_IMPACTS["Hormuz"];
 
+      // Reset risks first
+      nodes = JSON.parse(JSON.stringify(initialNodes));
+      activeCascadeCorridor = selectedChoke;
+
+      // Stage 1: Chokepoint & Origins Interdiction
+      const chokeNode = nodes.find(n => n.id === config.chokeId);
       if (chokeNode) chokeNode.risk = 1.0;
-      if (statusText) statusText.innerHTML = `<span class="text-red font-bold"><i class="fa-solid fa-radiation"></i> Interdiction Active at ${selectedChoke}: Propagating risk wave (Decay: 0.60/hop)...</span>`;
+      nodes.filter(n => config.origins.includes(n.id)).forEach(o => o.risk = 0.85);
+
+      if (statusText) {
+        statusText.innerHTML = `<span class="text-red font-bold"><i class="fa-solid fa-radiation"></i> Interdiction Active at ${selectedChoke}: Propagating wave through corridor...</span>`;
+      }
       renderTwin();
 
+      // Stage 2: Discharge Hub Impact (250ms)
       setTimeout(() => {
-        nodes.filter(n => n.type === "dest").forEach(d => d.risk = 0.60);
+        nodes.filter(n => config.dests.includes(n.id)).forEach(d => d.risk = 0.60);
         renderTwin();
       }, 250);
 
+      // Stage 3: SPR Cavern Response (500ms)
       setTimeout(() => {
-        nodes.filter(n => n.type === "spr").forEach(s => s.risk = 0.36);
-        if (statusText) statusText.innerHTML = `<span class="text-amber font-bold">Cascade Impacted Refineries & SPR Caverns (Jamnagar, Vadinar, Mangalore/Padur, Vizag).</span>`;
+        nodes.filter(n => config.sprs.includes(n.id)).forEach(s => s.risk = 0.36);
+        if (statusText) {
+          statusText.innerHTML = config.statusHtml;
+        }
         renderTwin();
       }, 500);
     });
@@ -1723,7 +1821,10 @@ function initDigitalTwinMap() {
   if (btnReset) {
     btnReset.addEventListener("click", () => {
       nodes = JSON.parse(JSON.stringify(initialNodes));
-      if (statusText) statusText.textContent = "Simulation Reset · Network calm. Click Trigger Cascade to evaluate interdiction.";
+      activeCascadeCorridor = null;
+      if (statusText) {
+        statusText.innerHTML = "<span>Ready · Decay factor: 0.60 per hop | Select a strategic chokepoint and click Trigger Cascade to evaluate interdiction.</span>";
+      }
       renderTwin();
     });
   }
@@ -1776,4 +1877,49 @@ function initModelSandbox() {
       outReason.textContent = `Evaluated: High tension signals detected in headline text.`;
     }
   }
+}
+
+/* ==============================================================================
+   13. LEGAL MODALS (Terms & Conditions / Privacy Policy)
+   ============================================================================== */
+function initLegalModals() {
+  const termsBtn = document.getElementById("footer-terms-btn");
+  const privacyBtn = document.getElementById("footer-privacy-btn");
+  const termsModal = document.getElementById("terms-modal");
+  const privacyModal = document.getElementById("privacy-modal");
+  const termsClose = document.getElementById("terms-close-btn");
+  const privacyClose = document.getElementById("privacy-close-btn");
+
+  if (termsBtn && termsModal) {
+    termsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      termsModal.classList.add("active");
+    });
+  }
+  if (privacyBtn && privacyModal) {
+    privacyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      privacyModal.classList.add("active");
+    });
+  }
+  if (termsClose && termsModal) {
+    termsClose.addEventListener("click", () => {
+      termsModal.classList.remove("active");
+    });
+  }
+  if (privacyClose && privacyModal) {
+    privacyClose.addEventListener("click", () => {
+      privacyModal.classList.remove("active");
+    });
+  }
+
+  [termsModal, privacyModal].forEach(m => {
+    if (m) {
+      m.addEventListener("click", (e) => {
+        if (e.target === m) {
+          m.classList.remove("active");
+        }
+      });
+    }
+  });
 }
