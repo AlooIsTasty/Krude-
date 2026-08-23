@@ -220,9 +220,9 @@ body {
 }
 
 .nav-inner {
-    max-width: 1400px;
+    max-width: 1440px;
     margin: 0 auto;
-    padding: 0 40px;
+    padding: 0 60px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -237,7 +237,7 @@ body {
 }
 
 .nav-brand:hover {
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 
 .brand-logo-wrap {
@@ -251,13 +251,14 @@ body {
     height: 100%;
     fill: #FFFFFF;
     transition: fill var(--transition-smooth), transform var(--transition-smooth), filter var(--transition-smooth);
+    transform: none;
 }
 
 /* When Scrolled Down: Change Logo Color to Glowing Electric Amber / High-Contrast */
 .site-header.scrolled .brand-logo-svg {
     fill: var(--accent-amber);
-    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.4));
-    transform: rotate(-3deg);
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.45));
+    transform: none;
 }
 
 .nav-links {
@@ -3636,26 +3637,26 @@ input:checked+.toggle-slider:before {
     background: linear-gradient(180deg, #10141D 0%, #080A0E 100%);
     border: 1px solid var(--border-active);
     border-radius: var(--radius-lg);
-    padding: 64px;
+    padding: 44px 28px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 80px;
+    margin-bottom: 28px;
 }
 
 .cta-heading {
     font-family: var(--font-display);
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     font-weight: 800;
     color: #fff;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .cta-sub {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: var(--text-muted);
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .cta-action-btn {
@@ -3663,24 +3664,30 @@ input:checked+.toggle-slider:before {
     color: #000000;
     text-decoration: none;
     font-family: var(--font-display);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    padding: 18px 42px;
+    padding: 16px 36px;
     border-radius: var(--radius-pill);
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    box-shadow: 0 12px 32px rgba(255, 255, 255, 0.2);
-    transition: transform var(--transition-snappy), background var(--transition-snappy);
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+    transition: transform var(--transition-snappy), background var(--transition-snappy), box-shadow var(--transition-snappy);
+}
+
+.cta-action-btn:hover {
+    transform: translateY(-2px);
+    background: var(--accent-amber);
+    box-shadow: 0 12px 32px rgba(245, 158, 11, 0.35);
 }
 
 .site-footer {
     border-top: 1px solid var(--border-subtle);
-    padding: 40px 0 60px 0;
+    padding: 20px 0 24px 0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    font-size: 0.88rem;
+    gap: 12px;
+    font-size: 0.86rem;
     color: var(--text-dim);
 }
 
@@ -3689,30 +3696,30 @@ input:checked+.toggle-slider:before {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 14px;
 }
 
 .footer-brand-col {
     display: flex;
     align-items: baseline;
-    gap: 12px;
+    gap: 10px;
 }
 
 .footer-brand {
     font-family: var(--font-display);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: #FFFFFF;
 }
 
 .footer-copy {
     color: var(--text-muted);
-    font-size: 0.84rem;
+    font-size: 0.82rem;
 }
 
 .footer-authors-col {
     color: var(--text-secondary);
-    font-size: 0.88rem;
+    font-size: 0.86rem;
 }
 
 .footer-authors-col strong {
@@ -3725,8 +3732,8 @@ input:checked+.toggle-slider:before {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 16px;
-    padding-top: 16px;
+    gap: 12px;
+    padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
@@ -3740,7 +3747,7 @@ input:checked+.toggle-slider:before {
 .footer-link {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     transition: color var(--transition-snappy);
 }
 
@@ -3754,6 +3761,49 @@ input:checked+.toggle-slider:before {
     align-items: center;
     gap: 6px;
     font-weight: 600;
+}
+
+.footer-link.github-link:hover {
+    color: #FBBF24;
+    text-decoration: underline;
+}
+
+/* Global Scroll Animations & Button Hover Micro-interactions */
+.fade-in-scroll {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+.fade-in-scroll.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-in-text {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+.fade-in-text.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Subtle Interactive Button Hover Animations */
+button, .strat-btn, .quick-sample-btn, .proc-mode-btn, .sim-action-btn, .threat-pill, .term-run-btn, .sp-tab {
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.18s ease, border-color 0.18s ease, color 0.18s ease !important;
+}
+
+button:hover, .strat-btn:hover, .quick-sample-btn:hover, .proc-mode-btn:hover, .sim-action-btn:hover, .term-run-btn:hover {
+    transform: translateY(-2px) !important;
+}
+
+button:active, .strat-btn:active, .quick-sample-btn:active, .proc-mode-btn:active, .sim-action-btn:active, .term-run-btn:active {
+    transform: translateY(0px) scale(0.98) !important;
 }
 
 .footer-link.github-link:hover {
