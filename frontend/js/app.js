@@ -506,7 +506,7 @@ function initRiskBoard() {
     const data = CHOKEPOINTS_DATA[activeSelectedCorridor];
     if (!data) return;
     const titleEl = document.getElementById("weights-panel-title");
-    if (titleEl) titleEl.textContent = `${activeSelectedCorridor}: Threat Signal Tuner`;
+    if (titleEl) titleEl.textContent = `${activeSelectedCorridor}: Signal Sensitivity Sandbox`;
 
     if (sNews) { sNews.value = data.raw_signals.news; document.getElementById("val-weight-news").textContent = data.raw_signals.news.toFixed(1); }
     if (sPrice) { sPrice.value = data.raw_signals.price; document.getElementById("val-weight-price").textContent = data.raw_signals.price.toFixed(1); }
@@ -855,7 +855,7 @@ function openHeadlineModal(item) {
 
   const sourceEl = document.getElementById("modal-source-name");
   if (sourceEl) {
-    sourceEl.textContent = item.source || item.headline_source || "Live News Wire";
+    sourceEl.textContent = item.source || item.headline_source || "News Wire";
   }
 
   const reasonEl = document.getElementById("modal-reason-text");
@@ -1247,14 +1247,14 @@ async function refreshProcurementOrchestrator() {
 
   let corridorScores = {};
   if (activeProcurementMode === "sim") {
-    // Collect from interactive Geopolitical Risk Board
+    // Collect from interactive Corridor Threat Board
     Object.keys(CHOKEPOINTS_DATA).forEach(k => {
       corridorScores[k] = CHOKEPOINTS_DATA[k].score;
     });
-    if (labelEl) labelEl.textContent = "Geopolitical Risk Board Overrides Active";
+    if (labelEl) labelEl.textContent = "Corridor Threat Board Overrides Active";
     if (badgeEl) badgeEl.style.borderColor = "rgba(245, 158, 11, 0.4)";
   } else {
-    // Live feed scores
+    // Stream feed scores
     try {
       const res = await fetch("/api/risk/scores");
       if (res.ok) {
@@ -1268,7 +1268,7 @@ async function refreshProcurementOrchestrator() {
     } catch (e) {
       corridorScores = { "Hormuz": 6.8, "Bab-el-Mandeb": 7.5, "Suez": 4.5, "Malacca": 2.1, "Cape of Good Hope": 1.2 };
     }
-    if (labelEl) labelEl.textContent = "Live Stream Feed Active";
+    if (labelEl) labelEl.textContent = "KrudeAi Stream Feed Active";
     if (badgeEl) badgeEl.style.borderColor = "rgba(16, 185, 129, 0.3)";
   }
 

@@ -504,13 +504,13 @@ body {
 /* Live Status Card */
 .hero-live-card {
     align-self: flex-end;
-    background: rgba(18, 22, 30, 0.7);
+    background: rgba(18, 22, 30, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    padding: 22px 26px;
-    width: 280px;
+    padding: 22px 24px;
+    width: 300px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
     transform: translateX(60px);
     opacity: 0;
@@ -576,6 +576,19 @@ body {
     letter-spacing: 0.05em;
 }
 
+.live-card-badge-tag {
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    color: var(--accent-red);
+}
+
 .live-card-metric {
     display: flex;
     align-items: baseline;
@@ -594,6 +607,25 @@ body {
     font-family: var(--font-mono);
     font-size: 1.1rem;
     color: var(--text-muted);
+}
+
+.live-conversion-caption {
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.live-conversion-caption i {
+    color: var(--accent-amber);
+    font-size: 0.8rem;
+    flex-shrink: 0;
 }
 
 .live-card-footer {

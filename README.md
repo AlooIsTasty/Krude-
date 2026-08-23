@@ -96,8 +96,8 @@ Traditional energy security risk monitoring operates in fragmented silos:
 
 ##  3. Key Modules & Features
 
-### 1.  Live Geopolitical Risk Board & Intelligence Feed
-* **Live Corridors Monitored**: Strait of Hormuz, Bab-el-Mandeb, Suez Canal, Malacca Strait, Cape of Good Hope.
+### 1.  Corridor Threat Board & Intelligence Feed
+* **Corridors Monitored**: Strait of Hormuz, Bab-el-Mandeb, Suez Canal, Malacca Strait, Cape of Good Hope.
 * **Non-Blocking Background Caching**: Response times optimized down to **`<25 ms`** using background pre-fetching and thread pooling.
 * **Corridor-Specific Threat Score ($0 - 10$)**: Normalized risk scores calculated using Noisy-OR aggregation and exponential time decay ($\lambda = 0.05/\text{day}$).
 
@@ -134,7 +134,7 @@ Traditional energy security risk monitoring operates in fragmented silos:
   - **Steady Linear Release** ($180\text{ kbd}$ · 52-day coverage).
   - **Aggressive Price Arrest** ($350\text{ kbd}$ · 28-day coverage).
   - **Hold & Conserve** ($65\text{ kbd}$ · 140+ day coverage).
-  - **Sync Live Risk**: Dynamically calculates optimal drawdown rate based on active real-time corridor threat scores.
+  - **Sync Risk Scores**: Dynamically calculates optimal drawdown rate based on active real-time corridor threat scores.
 
 ### 6.  Maritime Supply Chain Digital Twin
 * World-scale NetworkX maritime route graph rendered with smooth quadratic bezier curved paths across ocean basins.

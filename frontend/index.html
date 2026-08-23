@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Krude | Energy Supply Chain & Geopolitical Risk Digital Twin</title>
   <meta name="description"
-    content="Live geopolitical risk scoring, disruption simulation, and procurement rerouting for India's crude supply.">
+    content="Geopolitical risk scoring, disruption simulation, and procurement rerouting for India's crude supply.">
 
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -63,7 +63,7 @@
 
       <!-- Strict 5 Header Navigation Items -->
       <nav class="nav-links">
-        <a href="#risk-board" class="nav-item">Risk Board</a>
+        <a href="#risk-board" class="nav-item">Threat Board</a>
         <span class="nav-dot">·</span>
         <a href="#simulator" class="nav-item">Simulator</a>
         <span class="nav-dot">·</span>
@@ -140,20 +140,24 @@
         <div class="hero-right-col">
           <div class="hero-tagline-box">
             <p class="hero-tagline-text">
-              Live geopolitical risk scoring, disruption simulation, and procurement rerouting for India's crude supply.
+              Geopolitical risk scoring, disruption simulation, and procurement rerouting for India's crude supply.
             </p>
           </div>
 
-          <!-- Live Status Card (Hormuz · 6.8 · updated 2m ago) -->
+          <!-- Status Card (Hormuz · 6.8 · Threat Index -> Disruption Probability) -->
           <div class="hero-live-card" id="hero-live-card">
             <div class="live-card-inner">
               <div class="live-card-status">
                 <span class="pulse-indicator pulse-red"></span>
                 <span class="live-corridor-name">Hormuz</span>
+                <span class="live-card-badge-tag">Threat Index</span>
               </div>
               <div class="live-card-metric">
                 <span class="live-score-val" id="hero-live-score">6.8</span>
                 <span class="live-score-scale">/ 10</span>
+              </div>
+              <div class="live-conversion-caption">
+                <i class="fa-solid fa-calculator"></i> Threat index converts to disruption probability
               </div>
               <div class="live-card-footer">
                 <span class="live-update-badge"><i class="fa-solid fa-bolt"></i> KrudeAi Live</span>
@@ -378,14 +382,13 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- 3. LIVE RISK BOARD (Core Screen) -->
+    <!-- 3. CORRIDOR THREAT BOARD (Core Screen) -->
     <!-- ===================================================================== -->
     <section id="risk-board" class="section-container">
 
       <div class="section-header-block">
-        <h2 class="section-main-heading">Live Geopolitical Risk Board</h2>
-        <p class="section-sub-heading">Real-time interdiction probability P(t) calibrated across global maritime
-          chokepoints.</p>
+        <h2 class="section-main-heading">Corridor Threat Board</h2>
+        <p class="section-sub-heading">Current threat index per chokepoint, with analyst signal tuning</p>
       </div>
 
       <!-- Row of 5 Chokepoint Cards -->
@@ -540,8 +543,8 @@
         <div class="weights-control-panel">
           <div class="panel-header-row">
             <div>
-              <h4 class="panel-title" id="weights-panel-title">Hormuz: Threat Signal Tuner</h4>
-              <p class="panel-sub">Simulate and adjust multi-source intelligence signals for the selected corridor.</p>
+              <h4 class="panel-title" id="weights-panel-title">Hormuz: Signal Sensitivity Sandbox</h4>
+              <p class="panel-sub">Adjust weights to test how the index responds. Does not affect the live probability model.</p>
             </div>
             <button id="reset-weights-btn" class="reset-link-btn">Reset corridor</button>
           </div>
@@ -583,7 +586,7 @@
           </div>
 
           <div class="weights-note">
-            <i class="fa-solid fa-circle-info"></i> Adjusting sliders tunes intelligence signals specifically for the active corridor.
+            <i class="fa-solid fa-circle-info"></i> Adjust weights to test how the index responds. Does not affect the live probability model.
           </div>
         </div>
 
@@ -1028,16 +1031,16 @@
       <div class="procurement-toolbar">
         <div class="proc-mode-switch">
           <button class="proc-mode-btn active" id="proc-mode-live" data-mode="live">
-            <i class="fa-solid fa-satellite-dish"></i> Live Stream Feed
+            <i class="fa-solid fa-satellite-dish"></i> KrudeAi Stream Feed
           </button>
           <button class="proc-mode-btn" id="proc-mode-sim" data-mode="sim">
-            <i class="fa-solid fa-sliders"></i> Live Geopolitical Risk Board
+            <i class="fa-solid fa-sliders"></i> Corridor Threat Board
           </button>
         </div>
 
         <div class="proc-status-badge" id="proc-source-badge">
           <span class="pulse-dot"></span>
-          <span id="proc-source-label">Live Stream Feed Active</span>
+          <span id="proc-source-label">KrudeAi Stream Feed Active</span>
         </div>
       </div>
 
@@ -1062,7 +1065,7 @@
           <button class="strat-btn active" data-strategy="steady"><i class="fa-solid fa-chart-line"></i> Steady Drawdown (180 kbd)</button>
           <button class="strat-btn" data-strategy="aggressive"><i class="fa-solid fa-bolt"></i> Aggressive Early Release (350 kbd)</button>
           <button class="strat-btn" data-strategy="hold"><i class="fa-solid fa-shield-halved"></i> Hold & Conserve (65 kbd)</button>
-          <button class="strat-btn strat-sync-btn" id="spr-sync-live-btn"><i class="fa-solid fa-link"></i> Sync Live Risk</button>
+          <button class="strat-btn strat-sync-btn" id="spr-sync-live-btn"><i class="fa-solid fa-link"></i> Sync Risk Scores</button>
         </div>
 
         <!-- Live SPR KPI Grid -->
@@ -1245,7 +1248,7 @@
 
       </div>
 
-      <!-- Live Custom Headline Inference Terminal -->
+      <!-- Custom Headline Inference Terminal -->
       <div class="live-inference-terminal-card">
         <div class="term-header">
           <div class="term-dots">
@@ -1253,7 +1256,7 @@
             <span class="t-dot amber"></span>
             <span class="t-dot green"></span>
           </div>
-          <span class="term-title">KrudeAi Live Inference Sandbox (POST /api/model/analyze)</span>
+          <span class="term-title">KrudeAi Inference Sandbox (POST /api/model/analyze)</span>
         </div>
 
         <div class="term-body">
@@ -1359,7 +1362,7 @@
         <div class="legal-modal-body">
           <p><strong>1. Data Collection:</strong> Krude does not collect, sell, or monetize any personal telemetry or tracking cookies.</p>
           <p><strong>2. Local Inference:</strong> Custom inference sandbox requests run locally or against specified local endpoints without remote data logging.</p>
-          <p><strong>3. Third-Party Feeds:</strong> Live maritime news feeds are retrieved securely using authenticated public news APIs directly from your configured environment.</p>
+          <p><strong>3. Third-Party Feeds:</strong> Maritime news feeds are retrieved securely using authenticated public news APIs directly from your configured environment.</p>
         </div>
       </div>
     </div>
