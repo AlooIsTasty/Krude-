@@ -31,18 +31,69 @@ class AdaptiveProcurementOrchestrator:
         self.db = db
 
     def _load_legacy_suppliers(self) -> List[Dict[str, Any]]:
-        """Returns baseline crude supplier benchmarks."""
+        """Returns comprehensive strategic alternative crude supply routes for India."""
         return [
-            {"id": "SA", "name": "Saudi Arabia", "grade": "Arab Light", "corridor": "Hormuz", "cost_usd_bbl": 84.50, "transit_time_days": 4.5, "capacity_mbpd": 2.10, "notes": "Primary Persian Gulf supplier."},
-            {"id": "AE", "name": "UAE", "grade": "Murban", "corridor": "Hormuz", "cost_usd_bbl": 86.00, "transit_time_days": 3.5, "capacity_mbpd": 1.20, "notes": "ADCOP Fujairah deepwater bypass available."},
-            {"id": "IQ", "name": "Iraq", "grade": "Basrah Medium", "corridor": "Hormuz", "cost_usd_bbl": 81.50, "transit_time_days": 5.0, "capacity_mbpd": 1.50, "notes": "High volume supplier via Basra terminal."},
-            {"id": "US", "name": "USA", "grade": "WTI Midland", "corridor": "Cape of Good Hope", "cost_usd_bbl": 89.00, "transit_time_days": 32.0, "capacity_mbpd": 0.80, "notes": "Atlantic long-haul alternative."},
-            {"id": "RU", "name": "Russia", "grade": "Urals / ESPO", "corridor": "Suez", "cost_usd_bbl": 78.50, "transit_time_days": 26.0, "capacity_mbpd": 1.90, "notes": "Discounted Baltic/Black Sea source."}
+            {
+                "id": "BR", "name": "Brazil", "supplier": "Brazil", "grade": "Lula / Tupi Light", "crude_grade": "Lula / Tupi Light",
+                "origin_terminal": "Tupi FPSO / Santos", "corridor": "Cape of Good Hope", "chokepoint_route": "Cape of Good Hope",
+                "cost_usd_bbl": 71.15, "landed_cost_usd": 71.15, "transit_time_days": 28, "searoute_days": 28,
+                "capacity_mbpd": 0.34, "spare_capacity_kbd": 340, "status": "Optimal Route",
+                "why": "Zero Hormuz exposure, high API grade compatibility (30.5° API, 0.4% S), +340 kbd available charter capacity."
+            },
+            {
+                "id": "OM", "name": "Oman", "supplier": "Oman", "grade": "Oman Blend", "crude_grade": "Oman Blend",
+                "origin_terminal": "Duqm / Mina Al Fahal", "corridor": "Cape of Good Hope", "chokepoint_route": "Direct Arabian Sea",
+                "cost_usd_bbl": 73.10, "landed_cost_usd": 73.10, "transit_time_days": 7, "searoute_days": 7,
+                "capacity_mbpd": 0.26, "spare_capacity_kbd": 260, "status": "Bypass Direct",
+                "why": "Bypasses Strait of Hormuz completely; shortest transit (7 days) directly into Mangalore / Kochi refineries."
+            },
+            {
+                "id": "US", "name": "USA", "supplier": "USA", "grade": "WTI Midland", "crude_grade": "WTI Midland",
+                "origin_terminal": "Corpus Christi / LOOP", "corridor": "Cape of Good Hope", "chokepoint_route": "Cape of Good Hope",
+                "cost_usd_bbl": 74.51, "landed_cost_usd": 74.51, "transit_time_days": 38, "searoute_days": 38,
+                "capacity_mbpd": 0.30, "spare_capacity_kbd": 300, "status": "Safe Route",
+                "why": "High-volume VLCC capacity, no maritime interdiction risk, sweet crude balancing Indian refinery sulfur budgets."
+            },
+            {
+                "id": "SA", "name": "Saudi Arabia", "supplier": "Saudi Arabia", "grade": "Arab Light / Medium", "crude_grade": "Arab Light / Medium",
+                "origin_terminal": "Yanbu Red Sea Terminal", "corridor": "Bab-el-Mandeb", "chokepoint_route": "Bab-el-Mandeb",
+                "cost_usd_bbl": 72.80, "landed_cost_usd": 72.80, "transit_time_days": 12, "searoute_days": 12,
+                "capacity_mbpd": 0.45, "spare_capacity_kbd": 450, "status": "Elevated Watch",
+                "why": "Pipeline bypass (5.0 MBPD East-West Petroline) shifts crude to Red Sea; carries exposure to southern Bab-el-Mandeb."
+            },
+            {
+                "id": "AE", "name": "UAE", "supplier": "UAE", "grade": "Murban Light", "crude_grade": "Murban Light",
+                "origin_terminal": "Fujairah Deepwater Hub", "corridor": "Cape of Good Hope", "chokepoint_route": "Direct Arabian Sea",
+                "cost_usd_bbl": 74.20, "landed_cost_usd": 74.20, "transit_time_days": 4, "searoute_days": 4,
+                "capacity_mbpd": 0.50, "spare_capacity_kbd": 500, "status": "Bypass Direct",
+                "why": "1.5 MBPD Habshan-Fujairah (ADCOP) pipeline completely bypasses Strait of Hormuz to Indian Ocean."
+            },
+            {
+                "id": "IQ", "name": "Iraq", "supplier": "Iraq", "grade": "Basrah Medium", "crude_grade": "Basrah Medium",
+                "origin_terminal": "Ceyhan Mediterranean Hub", "corridor": "Suez", "chokepoint_route": "Suez / Mediterranean",
+                "cost_usd_bbl": 75.90, "landed_cost_usd": 75.90, "transit_time_days": 24, "searoute_days": 24,
+                "capacity_mbpd": 0.22, "spare_capacity_kbd": 220, "status": "Bypass Route",
+                "why": "Kirkuk-Ceyhan pipeline bypasses Persian Gulf to Mediterranean terminal; subject to Suez transit availability."
+            },
+            {
+                "id": "RU", "name": "Russia", "supplier": "Russia", "grade": "ESPO Blend", "crude_grade": "ESPO Blend",
+                "origin_terminal": "Kozmino Pacific Port", "corridor": "Malacca", "chokepoint_route": "Malacca Strait",
+                "cost_usd_bbl": 76.40, "landed_cost_usd": 76.40, "transit_time_days": 18, "searoute_days": 18,
+                "capacity_mbpd": 0.35, "spare_capacity_kbd": 350, "status": "Safe Pacific Route",
+                "why": "Direct Pacific voyage to Indian East Coast refineries with low chokepoint interdiction friction."
+            },
+            {
+                "id": "NG", "name": "Nigeria", "supplier": "Nigeria", "grade": "Bonny Light", "crude_grade": "Bonny Light",
+                "origin_terminal": "Bonny Offshore Terminal", "corridor": "Cape of Good Hope", "chokepoint_route": "Cape of Good Hope",
+                "cost_usd_bbl": 73.80, "landed_cost_usd": 73.80, "transit_time_days": 25, "searoute_days": 25,
+                "capacity_mbpd": 0.28, "spare_capacity_kbd": 280, "status": "Safe Atlantic Route",
+                "why": "Atlantic sweet crude with low sulfur content (0.14% S) requiring zero desulfurization refinery penalty."
+            }
         ]
 
     def rank_suppliers(self, corridor_risk_scores: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
         """
-        Executes live ranking using the exact multi-criteria optimization formula:
+        Executes live ranking using multi-criteria optimization:
         score = 0.4*norm_cost + 0.3*(risk/10) + 0.2*norm_transit + 0.1*(1 - norm_capacity)
         Lower score = better.
         """
@@ -68,7 +119,7 @@ class AdaptiveProcurementOrchestrator:
         ranked_list = []
         for s in suppliers:
             corridor = s["corridor"]
-            risk_score = corridor_risk_scores.get(corridor, 5.0)
+            risk_score = corridor_risk_scores.get(corridor, 2.0)
 
             norm_cost = (s["cost_usd_bbl"] - min_c) / (max_c - min_c) if max_c > min_c else 0.5
             norm_risk = risk_score / 10.0
@@ -82,22 +133,16 @@ class AdaptiveProcurementOrchestrator:
                 0.1 * (1.0 - norm_capacity)
             )
 
-            ranked_list.append({
-                "id": s["id"],
-                "supplier": s["name"],
-                "grade": s["grade"],
-                "corridor": corridor,
-                "cost_usd_bbl": s["cost_usd_bbl"],
-                "transit_time_days": s["transit_time_days"],
-                "capacity_mbpd": s["capacity_mbpd"],
+            item_entry = dict(s)
+            item_entry.update({
                 "live_risk_score": round(risk_score, 1),
                 "normalized_cost": round(norm_cost, 3),
                 "normalized_risk": round(norm_risk, 3),
                 "normalized_transit_time": round(norm_transit, 3),
                 "normalized_capacity": round(norm_capacity, 3),
-                "optimization_score": round(composite_score, 4),
-                "notes": s.get("notes", "")
+                "optimization_score": round(composite_score, 4)
             })
+            ranked_list.append(item_entry)
 
         ranked_list.sort(key=lambda x: x["optimization_score"])
         for idx, item in enumerate(ranked_list, start=1):
@@ -109,6 +154,7 @@ class AdaptiveProcurementOrchestrator:
             "optimization_direction": "Lower score = better",
             "active_risk_inputs": corridor_risk_scores,
             "ranked_suppliers": ranked_list,
+            "ranked_options": ranked_list,
             "optimal_recommendation": ranked_list[0] if ranked_list else None
         }
 

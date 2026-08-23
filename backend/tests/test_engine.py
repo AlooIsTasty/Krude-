@@ -100,7 +100,7 @@ class TestKrudeDigitalTwin(unittest.TestCase):
             "Suez": 4.0
         })
         self.assertIn("ranked_suppliers", ranked)
-        self.assertEqual(len(ranked["ranked_suppliers"]), 5)
+        self.assertGreaterEqual(len(ranked["ranked_suppliers"]), 5)
         self.assertIsNotNone(ranked["optimal_recommendation"])
 
         # Test 2: Multi-source procurement allocation plan

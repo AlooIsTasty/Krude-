@@ -16,6 +16,7 @@ Honesty & Truthfulness Mapping:
 import sys
 import json
 import time
+import asyncio
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
@@ -250,18 +251,25 @@ def get_db_supply_nodes():
 
 # --- Risk & Simulation Endpoints ---
 
+@app.get("/api/risk")
+@app.get("/api/risk/live")
+@app.get("/api/risk/scores")
+def get_corridor_risk_scores():
+    """Returns the latest 0-10 risk scores and live headlines for the 5 corridors."""
+    return risk_agent.evaluate_all_corridors()
+
 @app.post("/api/risk/refresh")
 def refresh_risk_intelligence():
     """
     Component 1: Risk Intelligence Agent (REAL)
-    Re-queries GDELT DOC 2.0 API and re-runs Llama 3.2 3B Instruct inference.
+    Re-queries GDELT DOC 2.0 API and re-runs KrudeAi model inference.
     """
     return risk_agent.evaluate_all_corridors()
 
-@app.get("/api/risk/scores")
-def get_corridor_risk_scores():
-    """Returns the latest 0-10 risk scores for the 5 corridors."""
-    return risk_agent.evaluate_all_corridors()
+@app.get("/api/risk/headlines")
+def get_live_headlines():
+    """Returns all current live and recent breaking maritime headlines evaluated by KrudeAi."""
+    return risk_agent.get_live_ticker_headlines()
 
 @app.get("/api/risk/timeline")
 def get_corridor_timeline(corridor: str = Query("Hormuz", description="Corridor name: Hormuz, Bab-el-Mandeb, etc.")):

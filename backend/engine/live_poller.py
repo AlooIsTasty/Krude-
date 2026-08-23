@@ -104,7 +104,10 @@ class LivePollerManager:
             self.poller_task.cancel()
 
     async def _run_poller_loop(self):
-        """Executes periodic GDELT polling every 10 minutes with TF-IDF filtering."""
+        """Executes periodic GDELT polling and broadcasts live stream updates."""
+        from .risk_intel import RiskIntelligenceAgent
+        risk_agent = RiskIntelligenceAgent(self.data_dir, self.data_dir.parent / "models")
+
         while self.poller_active:
             try:
                 now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -115,16 +118,19 @@ class LivePollerManager:
                     c_prob = self.pipeline.compute_corridor_probability(c, latest_d_str)
                     corridors_status.append(c_prob)
 
+                headlines = risk_agent.get_live_ticker_headlines()
+
                 payload = {
                     "poll_timestamp": now_str,
                     "brent_spot_usd": 82.50,
                     "corridors": corridors_status,
+                    "headlines": headlines,
                     "status": "LIVE_STREAM_ACTIVE"
                 }
                 await self.broadcast_event("live_update", payload)
 
-                # Sleep 10 minutes (600s)
-                await asyncio.sleep(600)
+                # Broadcast periodic updates every 60s
+                await asyncio.sleep(60)
             except asyncio.CancelledError:
                 break
             except Exception:

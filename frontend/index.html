@@ -660,34 +660,38 @@
       </div>
     </section>
 
-    <!-- Modal for Pill Click: Model Reasoning vs Truth -->
+    <!-- Modal for Pill Click: Live Intelligence Inspection -->
     <div id="headline-modal" class="custom-modal-overlay">
       <div class="custom-modal-box">
         <div class="modal-header">
           <div class="modal-title-group">
-            <span class="modal-corridor-tag" id="modal-corridor-tag">HORMUZ</span>
+            <span class="modal-corridor-badge" id="modal-corridor-tag"><i class="fa-solid fa-location-dot"></i> HORMUZ</span>
             <h3 class="modal-headline-title" id="modal-headline-title">Headline</h3>
           </div>
-          <button class="modal-close-btn" id="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close-btn" id="modal-close-btn" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div class="scores-comparison-row">
-            <div class="score-box score-pred">
-              <span class="sb-label">KrudeAi Predicted</span>
-              <span class="sb-num" id="modal-pred-score">8.5</span>
+          <div class="modal-kpi-grid">
+            <div class="modal-kpi-card" id="modal-kpi-score">
+              <span class="kpi-card-label"><i class="fa-solid fa-gauge-high"></i> Threat Severity</span>
+              <div class="kpi-card-val"><span id="modal-pred-score" class="kpi-main-num">8.0</span><span class="kpi-max-num"> / 10</span></div>
             </div>
-            <div class="score-box score-true">
-              <span class="sb-label">Ground Truth Label</span>
-              <span class="sb-num" id="modal-true-score">9.0</span>
+            <div class="modal-kpi-card" id="modal-kpi-status">
+              <span class="kpi-card-label"><i class="fa-solid fa-shield-halved"></i> Classification</span>
+              <div class="kpi-pill-wrap"><span id="modal-severity-level" class="modal-threat-pill threat-red">CRITICAL</span></div>
             </div>
-            <div class="score-box score-delta">
-              <span class="sb-label">Model Delta</span>
-              <span class="sb-num" id="modal-delta-score">-0.5</span>
+            <div class="modal-kpi-card" id="modal-kpi-source">
+              <span class="kpi-card-label"><i class="fa-solid fa-newspaper"></i> Verified Feed</span>
+              <div class="kpi-source-val" id="modal-source-name">Al Jazeera English</div>
             </div>
           </div>
+
           <div class="modal-reason-box">
-            <h4 class="mrb-title">Geopolitical Reasoning Output:</h4>
-            <p class="mrb-text" id="modal-reason-text">Loading reason...</p>
+            <div class="mrb-header">
+              <i class="fa-solid fa-brain"></i>
+              <span>KrudeAi Geopolitical Reasoning</span>
+            </div>
+            <p class="mrb-text" id="modal-reason-text">Loading analysis...</p>
           </div>
         </div>
       </div>
@@ -907,7 +911,6 @@
           <div class="sim-chart-card">
             <div class="card-header-bar">
               <h4 class="card-header-title">Macroeconomic & Supply Transmission Waterfall</h4>
-              <span class="card-tag">Lock 2 Transmission Model</span>
             </div>
 
             <div class="waterfall-cards-grid" id="waterfall-cards-grid">
@@ -1018,8 +1021,24 @@
     <section id="procurement" class="section-container">
       <div class="section-header-block">
         <h2 class="section-main-heading">Adaptive Procurement Orchestrator</h2>
-        <p class="section-sub-heading">Real-time alternative crude route ranking with landed cost, transit time, and
-          corridor risk filtering.</p>
+        <p class="section-sub-heading">Real-time alternative crude route ranking with landed cost, transit time, and corridor risk filtering.</p>
+      </div>
+
+      <!-- Procurement Control & Source Switcher -->
+      <div class="procurement-toolbar">
+        <div class="proc-mode-switch">
+          <button class="proc-mode-btn active" id="proc-mode-live" data-mode="live">
+            <i class="fa-solid fa-satellite-dish"></i> Live Stream Feed
+          </button>
+          <button class="proc-mode-btn" id="proc-mode-sim" data-mode="sim">
+            <i class="fa-solid fa-sliders"></i> Live Geopolitical Risk Board
+          </button>
+        </div>
+
+        <div class="proc-status-badge" id="proc-source-badge">
+          <span class="pulse-dot"></span>
+          <span id="proc-source-label">Live Stream Feed Active</span>
+        </div>
       </div>
 
       <div class="procurement-list-deck" id="procurement-list-deck">
@@ -1040,9 +1059,34 @@
 
         <!-- Strategy Toggles -->
         <div class="strategy-toggles-bar">
-          <button class="strat-btn active" data-strategy="steady">Steady Drawdown (180 kbd)</button>
-          <button class="strat-btn" data-strategy="aggressive">Aggressive Early Release (350 kbd)</button>
-          <button class="strat-btn" data-strategy="hold">Hold & Conserve</button>
+          <button class="strat-btn active" data-strategy="steady"><i class="fa-solid fa-chart-line"></i> Steady Drawdown (180 kbd)</button>
+          <button class="strat-btn" data-strategy="aggressive"><i class="fa-solid fa-bolt"></i> Aggressive Early Release (350 kbd)</button>
+          <button class="strat-btn" data-strategy="hold"><i class="fa-solid fa-shield-halved"></i> Hold & Conserve (65 kbd)</button>
+          <button class="strat-btn strat-sync-btn" id="spr-sync-live-btn"><i class="fa-solid fa-link"></i> Sync Live Risk</button>
+        </div>
+
+        <!-- Live SPR KPI Grid -->
+        <div class="spr-kpi-grid">
+          <div class="spr-kpi-card">
+            <span class="spr-kpi-lbl">Total Stored Reserve</span>
+            <span class="spr-kpi-val font-mono">39.28 MMBBL</span>
+            <span class="spr-kpi-sub">5.33 MMT (100% Full)</span>
+          </div>
+          <div class="spr-kpi-card">
+            <span class="spr-kpi-lbl">Active Drawdown Rate</span>
+            <span class="spr-kpi-val font-mono text-amber" id="spr-stat-rate">180 kbd</span>
+            <span class="spr-kpi-sub" id="spr-stat-rate-sub">Linear Release Strategy</span>
+          </div>
+          <div class="spr-kpi-card">
+            <span class="spr-kpi-lbl">Net Import Cover</span>
+            <span class="spr-kpi-val font-mono text-green" id="spr-stat-days">9.5 Days</span>
+            <span class="spr-kpi-sub">3.0 Days Emergency Floor</span>
+          </div>
+          <div class="spr-kpi-card">
+            <span class="spr-kpi-lbl">Safety Floor Horizon</span>
+            <span class="spr-kpi-val font-mono" id="spr-stat-exhaust">52 Days</span>
+            <span class="spr-kpi-sub" id="spr-stat-exhaust-sub">Until 3.0-day buffer reached</span>
+          </div>
         </div>
 
         <!-- 90-Day Trajectory Chart -->
@@ -1050,11 +1094,18 @@
           <canvas id="reserve-chart" class="reserve-chart" height="260"></canvas>
         </div>
 
+        <!-- Cavern Breakdown Strip -->
+        <div class="spr-cavern-strip">
+          <div class="cavern-pill"><i class="fa-solid fa-database"></i> <strong>Visakhapatnam</strong>: 1.33 MMT (9.77 MMBBL) · East Coast Hub</div>
+          <div class="cavern-pill"><i class="fa-solid fa-database"></i> <strong>Mangalore</strong>: 1.50 MMT (11.00 MMBBL) · MRPL Integrated</div>
+          <div class="cavern-pill"><i class="fa-solid fa-database"></i> <strong>Padur</strong>: 2.50 MMT (18.37 MMBBL) · Deep Cavern Storage</div>
+        </div>
+
         <!-- Single-line Executive Verdict -->
         <div class="reserve-verdict-banner">
           <i class="fa-solid fa-circle-check text-green"></i>
           <span class="verdict-text" id="reserve-verdict-text">
-            Steady drawdown at 180 kbd holds sovereign cover above 9.5 days through day 61.
+            Steady drawdown at 180 kbd holds sovereign cover above 3.0 days emergency floor through day 52.
           </span>
         </div>
 

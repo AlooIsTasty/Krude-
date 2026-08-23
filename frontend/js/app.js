@@ -547,6 +547,9 @@ function initRiskBoard() {
 
     updateAllCorridorCards();
     updateSignalBreakdownTable();
+    if (typeof refreshProcurementOrchestrator === "function" && activeProcurementMode === "sim") {
+      refreshProcurementOrchestrator();
+    }
   }
 
   [sNews, sPrice, sVessel, sSanctions].forEach(sl => {
@@ -563,6 +566,9 @@ function initRiskBoard() {
 
         syncSlidersToActiveCorridor();
         updateAllCorridorCards();
+        if (typeof refreshProcurementOrchestrator === "function" && activeProcurementMode === "sim") {
+          refreshProcurementOrchestrator();
+        }
       }
     });
   }
@@ -665,71 +671,23 @@ function drawAllSparklines() {
 /* ==============================================================================
    6. LIVE GDELT HEADLINE TICKER & HERO MODEL SCORE SYNC
    ============================================================================== */
-const DEFAULT_RATED_HEADLINES = [
-  { headline: "Iranian naval patrols step up inspections of commercial tankers navigating the Strait of Hormuz", corridor: "Hormuz", pred: 6.8, trueScore: 7.0, source: "Reuters", reason: "Heightened naval inspection frequency increases maritime interdiction risk for Persian Gulf crude." },
-  { headline: "Maritime security agency reports missile splash near commercial vessel in southern Red Sea", corridor: "Bab-el-Mandeb", pred: 8.2, trueScore: 8.0, source: "UKMTO", reason: "Ongoing kinetic strikes force major tanker operators to divert voyages around the Cape." },
-  { headline: "Singapore and Malaysian navies conduct joint maritime security patrol across Malacca Strait", corridor: "Malacca", pred: 2.1, trueScore: 2.0, source: "Straits Times", reason: "Coordinated naval patrols maintain stable sea lanes with nominal security risks." },
-  { headline: "US Treasury designates additional shadow fleet tankers carrying sanctioned crude", corridor: "Suez", pred: 6.2, trueScore: 6.5, source: "Bloomberg", reason: "Compliance enforcement increases freight friction on Russian crude voyages." },
-  { headline: "Oman reaffirms freedom of navigation and enhances naval patrols near Duqm Terminal", corridor: "Hormuz", pred: 3.2, trueScore: 3.5, source: "Oman News", reason: "Diplomatic assurance and naval security reduces immediate transit hazard." },
-  { headline: "South Atlantic bunker fuel demand spikes as redirected tankers refuel off South African coast", corridor: "Cape of Good Hope", pred: 2.4, trueScore: 2.5, source: "Lloyd's List", reason: "Safe open ocean route experiencing higher congestion and bunkering wait times." },
-  { headline: "GPS spoofing and AIS jamming reported off Iranian coast in Persian Gulf waterway", corridor: "Hormuz", pred: 7.4, trueScore: 7.0, source: "Maritime Executive", reason: "Electronic warfare tactics elevate tanker collision and interception probability." },
-  { headline: "Red Sea tanker insurance war-risk premiums climb 400% following drone wave", corridor: "Bab-el-Mandeb", pred: 7.8, trueScore: 8.0, source: "Financial Times", reason: "Steep insurance surges force VLCC diversions around Cape of Good Hope." }
-];
+let cachedTickerArticles = [];
+let tickerRefreshInterval = null;
 
 async function initHeadlineTicker() {
   const row1 = document.getElementById("marquee-row-1");
   const row2 = document.getElementById("marquee-row-2");
   if (!row1 || !row2) return;
 
-  row1.innerHTML = "";
-  row2.innerHTML = "";
-
-  let liveArticles = [];
-
-  try {
-    const res = await fetch("/api/risk");
-    if (res.ok) {
-      const data = await res.json();
-
-      // Update Hero Landing Page Card
-      syncHeroCardFromRisk(data);
-
-      if (data.corridors && data.corridors.length > 0) {
-        data.corridors.forEach(c => {
-          if (c.recent_headlines && c.recent_headlines.length > 0) {
-            c.recent_headlines.forEach(h => {
-              if (h.headline || h.title) {
-                liveArticles.push({
-                  headline: h.headline || h.title,
-                  corridor: c.corridor,
-                  pred: typeof h.risk_score === "number" ? h.risk_score : (c.risk_score || 5.0),
-                  trueScore: c.risk_score || 5.0,
-                  source: h.source || "GDELT Live DOC 2.0",
-                  reason: h.reason || c.reason || "Model calibrated geopolitical risk evaluation."
-                });
-              }
-            });
-          }
-        });
-      }
-    }
-  } catch (err) {
-    console.warn("Using baseline headline memory for ticker:", err);
-  }
-
-  const dataset = liveArticles.length >= 4
-    ? [...liveArticles, ...DEFAULT_RATED_HEADLINES, ...liveArticles, ...DEFAULT_RATED_HEADLINES]
-    : [...DEFAULT_RATED_HEADLINES, ...DEFAULT_RATED_HEADLINES, ...DEFAULT_RATED_HEADLINES];
-
   function createPill(item) {
     const pill = document.createElement("div");
     pill.className = "headline-pill";
-    const scoreVal = typeof item.pred === "number" ? item.pred : parseFloat(item.pred) || 5.0;
+    const scoreVal = typeof item.pred === "number" ? item.pred : (typeof item.risk_score === "number" ? item.risk_score : 5.0);
     const scoreColor = scoreVal >= 7.0 ? "threat-red" : (scoreVal >= 4.0 ? "threat-amber" : "threat-green");
 
     pill.innerHTML = `
       <span class="pill-tag">${item.corridor}</span>
-      <span class="pill-text">${item.headline}</span>
+      <span class="pill-text">${item.headline || item.title || ""}</span>
       <span class="pill-score ${scoreColor}">${scoreVal.toFixed(1)}</span>
     `;
 
@@ -737,10 +695,94 @@ async function initHeadlineTicker() {
     return pill;
   }
 
-  dataset.forEach((item, idx) => {
-    if (idx % 2 === 0) row1.appendChild(createPill(item));
-    else row2.appendChild(createPill(item));
-  });
+  function renderMarqueeItems(articles) {
+    if (!articles || articles.length === 0) return;
+    row1.innerHTML = "";
+    row2.innerHTML = "";
+
+    // Duplicate dataset so marquee loops seamlessly without visual breaks
+    const doubled = articles.length < 12 ? [...articles, ...articles, ...articles] : [...articles, ...articles];
+    doubled.forEach((item, idx) => {
+      if (idx % 2 === 0) row1.appendChild(createPill(item));
+      else row2.appendChild(createPill(item));
+    });
+  }
+
+  async function fetchLatestStreamArticles() {
+    let liveArticles = [];
+    try {
+      const res = await fetch("/api/risk/headlines");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          liveArticles = data;
+        }
+      }
+    } catch (e) {
+      // Fallback to /api/risk
+      try {
+        const res = await fetch("/api/risk");
+        if (res.ok) {
+          const data = await res.json();
+          syncHeroCardFromRisk(data);
+          if (data.corridors) {
+            data.corridors.forEach(c => {
+              if (c.recent_headlines) {
+                c.recent_headlines.forEach(h => {
+                  liveArticles.push({
+                    headline: h.headline || h.title,
+                    corridor: c.corridor,
+                    pred: typeof h.risk_score === "number" ? h.risk_score : (c.risk_score || 5.0),
+                    source: h.source || h.headline_source || "Live GDELT Wire",
+                    reason: h.reason || c.reason || "Model-calibrated maritime supply chain threat evaluation."
+                  });
+                });
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Unable to fetch live ticker:", err);
+      }
+    }
+
+    if (liveArticles.length > 0) {
+      cachedTickerArticles = liveArticles;
+      renderMarqueeItems(cachedTickerArticles);
+    }
+  }
+
+  // Initial load
+  await fetchLatestStreamArticles();
+
+  // Real-Time SSE Stream Subscription
+  try {
+    const eventSource = new EventSource("/api/stream/live");
+    eventSource.addEventListener("live_update", (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if (payload.headlines && payload.headlines.length > 0) {
+          cachedTickerArticles = payload.headlines;
+          renderMarqueeItems(cachedTickerArticles);
+        }
+        if (payload.corridors) {
+          const hormuz = payload.corridors.find(c => c.corridor === "Hormuz");
+          if (hormuz) syncHeroCardFromRisk({ corridors: payload.corridors });
+        }
+      } catch (err) {
+        console.warn("SSE parse error:", err);
+      }
+    });
+    eventSource.onerror = () => {
+      // Handled silently by fallback interval poller
+    };
+  } catch (err) {
+    console.warn("SSE not supported, using active polling.");
+  }
+
+  // Periodic active poller every 30 seconds
+  if (tickerRefreshInterval) clearInterval(tickerRefreshInterval);
+  tickerRefreshInterval = setInterval(fetchLatestStreamArticles, 30000);
 
   const modal = document.getElementById("headline-modal");
   const closeBtn = document.getElementById("modal-close-btn");
@@ -779,17 +821,45 @@ function openHeadlineModal(item) {
   const modal = document.getElementById("headline-modal");
   if (!modal) return;
 
-  const scoreVal = typeof item.pred === "number" ? item.pred : parseFloat(item.pred) || 5.0;
-  const trueVal = typeof item.trueScore === "number" ? item.trueScore : scoreVal;
+  const scoreVal = typeof item.pred === "number" ? item.pred : (typeof item.risk_score === "number" ? item.risk_score : 5.0);
+  const corridorName = (item.corridor || "HORMUZ").toUpperCase();
+  const headlineText = item.headline || item.title || "Maritime Security Intelligence Update";
 
-  document.getElementById("modal-corridor-tag").textContent = item.corridor.toUpperCase();
-  document.getElementById("modal-headline-title").textContent = item.headline;
-  document.getElementById("modal-pred-score").textContent = scoreVal.toFixed(1);
-  document.getElementById("modal-true-score").textContent = trueVal.toFixed(1);
+  const corridorTag = document.getElementById("modal-corridor-tag");
+  if (corridorTag) corridorTag.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${corridorName}`;
 
-  const delta = (scoreVal - trueVal).toFixed(1);
-  document.getElementById("modal-delta-score").textContent = (delta >= 0 ? `+${delta}` : delta);
-  document.getElementById("modal-reason-text").textContent = item.reason || `Evaluated by KrudeAi. Source: ${item.source || 'GDELT Live DOC 2.0'}.`;
+  const headlineTitle = document.getElementById("modal-headline-title");
+  if (headlineTitle) headlineTitle.textContent = headlineText;
+
+  const scoreEl = document.getElementById("modal-pred-score");
+  if (scoreEl) {
+    scoreEl.textContent = scoreVal.toFixed(1);
+    scoreEl.style.color = scoreVal >= 7.0 ? "#EF4444" : (scoreVal >= 4.0 ? "#F59E0B" : "#10B981");
+  }
+
+  const sevEl = document.getElementById("modal-severity-level");
+  if (sevEl) {
+    if (scoreVal >= 7.0) {
+      sevEl.textContent = "CRITICAL";
+      sevEl.className = "modal-threat-pill threat-red";
+    } else if (scoreVal >= 4.0) {
+      sevEl.textContent = "ELEVATED";
+      sevEl.className = "modal-threat-pill threat-amber";
+    } else {
+      sevEl.textContent = "LOW / STABLE";
+      sevEl.className = "modal-threat-pill threat-green";
+    }
+  }
+
+  const sourceEl = document.getElementById("modal-source-name");
+  if (sourceEl) {
+    sourceEl.textContent = item.source || item.headline_source || "Live News Wire";
+  }
+
+  const reasonEl = document.getElementById("modal-reason-text");
+  if (reasonEl) {
+    reasonEl.textContent = item.reason || "Model calibrated geopolitical risk evaluation on strategic crude transit corridor.";
+  }
 
   modal.classList.add("active");
 }
@@ -1134,7 +1204,13 @@ async function renderSupplyGapChart(days, gapKbd) {
           min: 3000,
           max: 6000,
           ticks: { color: "#10B981" },
-          grid: { color: "rgba(255,255,255,0.05)" }
+          grid: { color: "rgba(255,255,255,0.05)" },
+          title: {
+            display: true,
+            text: "Net Inflow & Demand (kbd) [Left Axis]",
+            color: "#10B981",
+            font: { size: 11, weight: "bold" }
+          }
         },
         yDraw: {
           type: "linear",
@@ -1142,7 +1218,13 @@ async function renderSupplyGapChart(days, gapKbd) {
           min: 0,
           max: 1200,
           ticks: { color: "#F59E0B" },
-          grid: { drawOnChartArea: false }
+          grid: { drawOnChartArea: false },
+          title: {
+            display: true,
+            text: "Optimized SPR Drawdown d(t) (kbd) [Right Axis]",
+            color: "#F59E0B",
+            font: { size: 11, weight: "bold" }
+          }
         }
       }
     }
@@ -1150,47 +1232,120 @@ async function renderSupplyGapChart(days, gapKbd) {
 }
 
 /* ==============================================================================
-   9. PROCUREMENT LIST
+   9. PROCUREMENT ORCHESTRATOR (Live vs Geopolitical Board Modes)
    ============================================================================== */
-const SUPPLIER_ROUTES = [
-  { rank: 1, country: "Brazil (Tupi FPSO)", cost: 71.15, days: 28, spare: 340, chokepoint: "Cape of Good Hope", risk: "Safe", why: "Ranked #1: Zero Hormuz exposure, high API grade compatibility, +340 kbd charter availability." },
-  { rank: 2, country: "Oman (Duqm Terminal)", cost: 73.10, days: 7, spare: 260, chokepoint: "Direct Arabian Sea", risk: "Safe", why: "Ranked #2: Bypasses Strait of Hormuz completely; shortest transit (7 days) directly to Mangalore." },
-  { rank: 3, country: "USA (Corpus Christi / TMX)", cost: 74.51, days: 39, spare: 300, chokepoint: "Cape of Good Hope", risk: "Safe", why: "Ranked #3: High-volume VLCC capacity, no chokepoint interdiction, sweet crude quality balance." },
-  { rank: 4, country: "Saudi Arabia (Yanbu Red Sea)", cost: 72.80, days: 12, spare: 450, chokepoint: "Bab-el-Mandeb", risk: "Elevated", why: "Ranked #4: Pipeline bypass of Persian Gulf to Red Sea; carries moderate Bab-el-Mandeb exposure." }
-];
+let activeProcurementMode = "live"; // "live" or "sim"
 
-function initProcurementList() {
+async function refreshProcurementOrchestrator() {
   const container = document.getElementById("procurement-list-deck");
   if (!container) return;
 
+  const badgeEl = document.getElementById("proc-source-badge");
+  const labelEl = document.getElementById("proc-source-label");
+
+  let corridorScores = {};
+  if (activeProcurementMode === "sim") {
+    // Collect from interactive Geopolitical Risk Board
+    Object.keys(CHOKEPOINTS_DATA).forEach(k => {
+      corridorScores[k] = CHOKEPOINTS_DATA[k].score;
+    });
+    if (labelEl) labelEl.textContent = "Geopolitical Risk Board Overrides Active";
+    if (badgeEl) badgeEl.style.borderColor = "rgba(245, 158, 11, 0.4)";
+  } else {
+    // Live feed scores
+    try {
+      const res = await fetch("/api/risk/scores");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.corridors) {
+          data.corridors.forEach(c => {
+            corridorScores[c.corridor] = c.risk_score;
+          });
+        }
+      }
+    } catch (e) {
+      corridorScores = { "Hormuz": 6.8, "Bab-el-Mandeb": 7.5, "Suez": 4.5, "Malacca": 2.1, "Cape of Good Hope": 1.2 };
+    }
+    if (labelEl) labelEl.textContent = "Live Stream Feed Active";
+    if (badgeEl) badgeEl.style.borderColor = "rgba(16, 185, 129, 0.3)";
+  }
+
+  try {
+    const resp = await fetch("/api/procurement/rank", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ corridor_risk_scores: corridorScores })
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const ranking = data.ranked_suppliers || data.ranked_options || [];
+      if (ranking && ranking.length > 0) {
+        renderProcurementCards(ranking);
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn("Using offline procurement ranking calculation:", err);
+  }
+
+  // Fallback dynamic strategic alternative routes
+  const fallbackList = [
+    { rank: 1, supplier: "Brazil", origin_terminal: "Tupi FPSO / Santos", crude_grade: "Lula / Tupi Light", landed_cost_usd: 71.15, cost_usd_bbl: 71.15, searoute_days: 28, spare_capacity_kbd: 340, chokepoint_route: "Cape of Good Hope", status: "Optimal Route", why: "Zero Hormuz exposure, high API grade compatibility (30.5° API, 0.4% S), +340 kbd available charter capacity." },
+    { rank: 2, supplier: "Oman", origin_terminal: "Duqm / Mina Al Fahal", crude_grade: "Oman Blend", landed_cost_usd: 73.10, cost_usd_bbl: 73.10, searoute_days: 7, spare_capacity_kbd: 260, chokepoint_route: "Direct Arabian Sea", status: "Bypass Direct", why: "Bypasses Strait of Hormuz completely; shortest transit (7 days) directly into Mangalore / Kochi refineries." },
+    { rank: 3, supplier: "USA", origin_terminal: "Corpus Christi / LOOP", crude_grade: "WTI Midland", landed_cost_usd: 74.51, cost_usd_bbl: 74.51, searoute_days: 39, spare_capacity_kbd: 300, chokepoint_route: "Cape of Good Hope", status: "Safe Route", why: "High-volume VLCC capacity, no maritime interdiction risk, sweet crude balancing Indian refinery sulfur budgets." },
+    { rank: 4, supplier: "Saudi Arabia", origin_terminal: "Yanbu Red Sea Terminal", crude_grade: "Arab Light / Medium", landed_cost_usd: 72.80, cost_usd_bbl: 72.80, searoute_days: 12, spare_capacity_kbd: 450, chokepoint_route: "Bab-el-Mandeb", status: "Elevated Watch", why: "Pipeline bypass (5.0 MBPD East-West Petroline) shifts crude to Red Sea; carries exposure to southern Bab-el-Mandeb drone activity." },
+    { rank: 5, supplier: "UAE", origin_terminal: "Fujairah Deepwater Hub", crude_grade: "Murban Light", landed_cost_usd: 74.20, cost_usd_bbl: 74.20, searoute_days: 4, spare_capacity_kbd: 500, chokepoint_route: "Direct Arabian Sea", status: "Bypass Direct", why: "1.5 MBPD Habshan-Fujairah (ADCOP) pipeline completely bypasses Strait of Hormuz into Gulf of Oman." },
+    { rank: 6, supplier: "Iraq", origin_terminal: "Ceyhan Mediterranean Hub", crude_grade: "Basrah Medium", landed_cost_usd: 75.90, cost_usd_bbl: 75.90, searoute_days: 24, spare_capacity_kbd: 220, chokepoint_route: "Suez / Mediterranean", status: "Bypass Route", why: "Kirkuk-Ceyhan pipeline bypasses Persian Gulf to Mediterranean terminal; subject to Suez transit availability." },
+    { rank: 7, supplier: "Russia", origin_terminal: "Kozmino Pacific Port", crude_grade: "ESPO Blend", landed_cost_usd: 76.40, cost_usd_bbl: 76.40, searoute_days: 18, spare_capacity_kbd: 350, chokepoint_route: "Malacca Strait", status: "Safe Pacific Route", why: "Direct Pacific voyage to Indian East Coast refineries with low chokepoint interdiction friction." },
+    { rank: 8, supplier: "Nigeria", origin_terminal: "Bonny Offshore Terminal", crude_grade: "Bonny Light", landed_cost_usd: 73.80, cost_usd_bbl: 73.80, searoute_days: 25, spare_capacity_kbd: 280, chokepoint_route: "Cape of Good Hope", status: "Safe Atlantic Route", why: "Atlantic sweet crude with low sulfur content (0.14% S) requiring zero desulfurization refinery penalty." }
+  ];
+  renderProcurementCards(fallbackList);
+}
+
+function renderProcurementCards(ranking) {
+  const container = document.getElementById("procurement-list-deck");
+  if (!container) return;
+
+  if (!ranking || ranking.length === 0) return;
+
   container.innerHTML = "";
-  SUPPLIER_ROUTES.forEach((item, idx) => {
+  ranking.forEach((item, idx) => {
     const card = document.createElement("div");
     card.className = `procurement-card ${idx === 0 ? 'expanded' : ''}`;
+    const chk = item.chokepoint_route || item.corridor || item.chokepoints_crossed || "Direct Open Ocean";
+    const isSafe = chk.toLowerCase().includes("cape") || chk.toLowerCase().includes("direct") || chk.toLowerCase().includes("pacific");
+    const costVal = parseFloat(item.landed_cost_usd || item.cost_usd_bbl || item.cost || 72.0);
+    const transitDays = item.searoute_days || item.transit_time_days || item.days || 25;
+    const spareVol = item.spare_capacity_kbd || (item.capacity_mbpd ? Math.round(item.capacity_mbpd * 1000) : 250);
+    const terminalName = item.origin_terminal || item.grade || item.crude_grade || "Primary Hub";
+    const supplierName = item.supplier || item.name || "Alternative Source";
 
     card.innerHTML = `
       <div class="pc-top-row">
-        <span class="pc-rank ${idx === 0 ? 'rank-top' : ''}">#${item.rank}</span>
-        <span class="pc-supplier-name">${item.country}</span>
-        <div class="pc-metric">
-          <span class="pcm-label">Landed Cost</span>
-          <span class="pcm-val">$${item.cost.toFixed(2)}/bbl</span>
+        <span class="pc-rank ${idx === 0 ? 'rank-top' : ''}">#${item.rank || idx + 1}</span>
+        <div class="pc-supplier-info">
+          <span class="pc-supplier-name">${supplierName} (${terminalName})</span>
         </div>
         <div class="pc-metric">
-          <span class="pcm-label">Transit</span>
-          <span class="pcm-val">${item.days} days</span>
+          <span class="pcm-label">Landed Cost</span>
+          <span class="pcm-val font-mono">$${costVal.toFixed(2)}/bbl</span>
+        </div>
+        <div class="pc-metric">
+          <span class="pcm-label">Searoute Transit</span>
+          <span class="pcm-val font-mono">${transitDays} days</span>
         </div>
         <div class="pc-metric">
           <span class="pcm-label">Spare Volume</span>
-          <span class="pcm-val text-green">+${item.spare} kbd</span>
+          <span class="pcm-val font-mono text-green">+${spareVol} kbd</span>
         </div>
         <div class="pc-metric">
-          <span class="pcm-label">Corridor</span>
-          <span class="threat-pill ${item.risk === 'Safe' ? 'threat-green' : 'threat-amber'}">${item.chokepoint}</span>
+          <span class="pcm-label">Corridor Route</span>
+          <span class="threat-pill ${isSafe ? 'threat-green' : 'threat-amber'}">${chk}</span>
         </div>
       </div>
       <div class="pc-expander">
-        <p><strong>Optimization Rationale:</strong> ${item.why}</p>
+        <p><strong>Optimization Rationale:</strong> ${item.why || item.notes || `Ranked #${item.rank || idx + 1}: Optimal replacement volume with calibrated landed crude parity and refinery API compatibility.`}</p>
       </div>
     `;
 
@@ -1202,38 +1357,233 @@ function initProcurementList() {
   });
 }
 
+function initProcurementList() {
+  const btnLive = document.getElementById("proc-mode-live");
+  const btnSim = document.getElementById("proc-mode-sim");
+
+  if (btnLive && btnSim) {
+    btnLive.addEventListener("click", () => {
+      btnLive.classList.add("active");
+      btnSim.classList.remove("active");
+      activeProcurementMode = "live";
+      refreshProcurementOrchestrator();
+    });
+
+    btnSim.addEventListener("click", () => {
+      btnSim.classList.add("active");
+      btnLive.classList.remove("active");
+      activeProcurementMode = "sim";
+      refreshProcurementOrchestrator();
+    });
+  }
+
+  refreshProcurementOrchestrator();
+}
+
 /* ==============================================================================
-   10. RESERVE OPTIMISATION
+   10. STRATEGIC RESERVE OPTIMISATION (Interactive Policies & Live Risk Sync)
    ============================================================================== */
-function initReserveChart() {
+let reserveChartInst = null;
+let activeReserveStrategy = "steady";
+
+const STRATEGY_DATA = {
+  steady: {
+    rate: "180 kbd",
+    rateSub: "Linear Release Strategy",
+    days: "9.5 Days",
+    exhaust: "52 Days",
+    exhaustSub: "Until 3.0-day buffer reached",
+    verdict: "Steady drawdown at 180 kbd holds sovereign cover above 3.0-day emergency safety floor through day 52.",
+    curve: (d) => Math.max(3.0, 9.5 - (d * 0.125) + (d > 40 ? 0.05 : 0))
+  },
+  aggressive: {
+    rate: "350 kbd",
+    rateSub: "Front-Loaded Price Arrest",
+    days: "9.5 Days",
+    exhaust: "28 Days",
+    exhaustSub: "Until 3.0-day buffer reached",
+    verdict: "Aggressive front-loaded release at 350 kbd arrests domestic price shock but depletes reserve to critical 3.0-day floor by day 28.",
+    curve: (d) => Math.max(3.0, 9.5 - (d * 0.232))
+  },
+  hold: {
+    rate: "65 kbd",
+    rateSub: "Critical Defense Baseline",
+    days: "9.5 Days",
+    exhaust: "140+ Days",
+    exhaustSub: "Extended Sovereign Survival",
+    verdict: "Hold & Conserve policy rations SPR release to 65 kbd baseline, extending sovereign crude buffer beyond 140 days.",
+    curve: (d) => Math.max(3.0, 9.5 - (d * 0.046))
+  }
+};
+
+function updateReserveUI(stratKey) {
+  const info = STRATEGY_DATA[stratKey] || STRATEGY_DATA.steady;
+
+  const rateEl = document.getElementById("spr-stat-rate");
+  if (rateEl) rateEl.textContent = info.rate;
+
+  const rateSubEl = document.getElementById("spr-stat-rate-sub");
+  if (rateSubEl) rateSubEl.textContent = info.rateSub;
+
+  const daysEl = document.getElementById("spr-stat-days");
+  if (daysEl) daysEl.textContent = info.days;
+
+  const exhaustEl = document.getElementById("spr-stat-exhaust");
+  if (exhaustEl) exhaustEl.textContent = info.exhaust;
+
+  const exhaustSubEl = document.getElementById("spr-stat-exhaust-sub");
+  if (exhaustSubEl) exhaustSubEl.textContent = info.exhaustSub;
+
+  const verdictEl = document.getElementById("reserve-verdict-text");
+  if (verdictEl) verdictEl.textContent = info.verdict;
+
+  renderReserveChart(stratKey);
+}
+
+function renderReserveChart(activeKey = "steady") {
   const canvas = document.getElementById("reserve-chart");
   if (!canvas || typeof Chart === "undefined") return;
 
-  const days = Array.from({ length: 90 }, (_, i) => i + 1);
-  const steadyLine = days.map(d => Math.max(3.0, 9.5 - (d * 0.10) + (d > 45 ? 0.05 : 0)));
-  const aggLine = days.map(d => Math.max(3.0, 9.5 - (d * 0.22)));
-  const holdLine = days.map(d => Math.max(3.0, 9.5 - (d * 0.03)));
+  if (reserveChartInst) reserveChartInst.destroy();
 
-  new Chart(canvas, {
+  const days = Array.from({ length: 90 }, (_, i) => i + 1);
+  const labels = days.map(d => `Day ${d}`);
+
+  const steadyLine = days.map(d => STRATEGY_DATA.steady.curve(d));
+  const aggLine = days.map(d => STRATEGY_DATA.aggressive.curve(d));
+  const holdLine = days.map(d => STRATEGY_DATA.hold.curve(d));
+  const floorLine = Array(90).fill(3.0);
+
+  reserveChartInst = new Chart(canvas, {
     type: "line",
     data: {
-      labels: days.map(d => `Day ${d}`),
+      labels: labels,
       datasets: [
-        { label: "Steady (180 kbd)", data: steadyLine, borderColor: "#10B981", borderWidth: 3, pointRadius: 0 },
-        { label: "Aggressive (350 kbd)", data: aggLine, borderColor: "#EF4444", borderWidth: 2, borderDash: [4, 4], pointRadius: 0 },
-        { label: "Hold & Wait", data: holdLine, borderColor: "#38BDF8", borderWidth: 2, borderDash: [2, 2], pointRadius: 0 }
+        {
+          label: "Steady Drawdown (180 kbd)",
+          data: steadyLine,
+          borderColor: "#10B981",
+          backgroundColor: activeKey === "steady" ? "rgba(16, 185, 129, 0.15)" : "transparent",
+          borderWidth: activeKey === "steady" ? 3.5 : 1.5,
+          fill: activeKey === "steady",
+          pointRadius: 0
+        },
+        {
+          label: "Aggressive Early Release (350 kbd)",
+          data: aggLine,
+          borderColor: "#EF4444",
+          backgroundColor: activeKey === "aggressive" ? "rgba(239, 68, 68, 0.15)" : "transparent",
+          borderWidth: activeKey === "aggressive" ? 3.5 : 1.5,
+          borderDash: activeKey === "aggressive" ? [] : [4, 4],
+          fill: activeKey === "aggressive",
+          pointRadius: 0
+        },
+        {
+          label: "Hold & Conserve (65 kbd)",
+          data: holdLine,
+          borderColor: "#38BDF8",
+          backgroundColor: activeKey === "hold" ? "rgba(56, 189, 248, 0.15)" : "transparent",
+          borderWidth: activeKey === "hold" ? 3.5 : 1.5,
+          borderDash: activeKey === "hold" ? [] : [2, 2],
+          fill: activeKey === "hold",
+          pointRadius: 0
+        },
+        {
+          label: "Emergency Safety Floor (3.0 Days Preserved)",
+          data: floorLine,
+          borderColor: "rgba(255, 255, 255, 0.4)",
+          borderDash: [6, 6],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false
+        }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: "#E2E8F0" } } },
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: "#E2E8F0", boxWidth: 14, font: { size: 11 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} days of cover`;
+            }
+          }
+        }
+      },
       scales: {
-        x: { ticks: { color: "#94A3B8", maxTicksLimit: 12 }, grid: { display: false } },
-        y: { min: 0, max: 12, ticks: { color: "#94A3B8" }, grid: { color: "rgba(255,255,255,0.05)" } }
+        x: {
+          ticks: { color: "#94A3B8", maxTicksLimit: 12 },
+          grid: { display: false }
+        },
+        y: {
+          min: 0,
+          max: 11,
+          ticks: { color: "#94A3B8" },
+          grid: { color: "rgba(255,255,255,0.05)" },
+          title: {
+            display: true,
+            text: "Sovereign Import Cover (Days)",
+            color: "#E2E8F0",
+            font: { size: 11, weight: "bold" }
+          }
+        }
       }
     }
   });
+}
+
+function initReserveChart() {
+  const stratBtns = document.querySelectorAll(".strat-btn[data-strategy]");
+  const syncBtn = document.getElementById("spr-sync-live-btn");
+
+  stratBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      stratBtns.forEach(b => b.classList.remove("active"));
+      if (syncBtn) syncBtn.classList.remove("active");
+      btn.classList.add("active");
+
+      const strat = btn.getAttribute("data-strategy");
+      activeReserveStrategy = strat;
+      updateReserveUI(strat);
+    });
+  });
+
+  if (syncBtn) {
+    syncBtn.addEventListener("click", () => {
+      stratBtns.forEach(b => b.classList.remove("active"));
+      syncBtn.classList.add("active");
+
+      // Compute optimal drawdown based on active Hormuz score
+      const hormuzScore = CHOKEPOINTS_DATA["Hormuz"] ? CHOKEPOINTS_DATA["Hormuz"].score : 6.8;
+      let optimalRate = Math.min(450, Math.round(hormuzScore * 38));
+      let daysCover = Math.max(22, Math.round(52 - (hormuzScore - 5.0) * 8));
+
+      const rateEl = document.getElementById("spr-stat-rate");
+      if (rateEl) rateEl.textContent = `${optimalRate} kbd`;
+
+      const rateSubEl = document.getElementById("spr-stat-rate-sub");
+      if (rateSubEl) rateSubEl.textContent = `Calibrated for ${hormuzScore.toFixed(1)}/10 Threat`;
+
+      const exhaustEl = document.getElementById("spr-stat-exhaust");
+      if (exhaustEl) exhaustEl.textContent = `${daysCover} Days`;
+
+      const verdictEl = document.getElementById("reserve-verdict-text");
+      if (verdictEl) {
+        verdictEl.textContent = `Risk-Calibrated Drawdown: At Hormuz threat ${hormuzScore.toFixed(1)}/10, optimal release of ${optimalRate} kbd covers Indian refinery deficits through day ${daysCover}.`;
+      }
+
+      // Choose closest strategy curve to render
+      const chosen = optimalRate > 250 ? "aggressive" : (optimalRate < 100 ? "hold" : "steady");
+      renderReserveChart(chosen);
+    });
+  }
+
+  updateReserveUI("steady");
 }
 
 /* ==============================================================================
